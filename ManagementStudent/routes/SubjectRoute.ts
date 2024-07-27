@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import mongoose, { isValidObjectId } from 'mongoose';
 import { repository } from '../models/DTO';
 import Subject, { ISubject } from '../models/Subject';
-import validation from '../validation/validationSubject';
+import validation from '../validation/ValidationSubject';
 import SubjectDetail, { ISubjectDetail } from '../models/SubjectDetail';
 const router = express.Router();
 interface GroupedSubjectDetail {
