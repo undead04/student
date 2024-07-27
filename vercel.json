@@ -1,0 +1,26 @@
+{
+    "builds": [
+      {
+        "src": "managerstudent/package.json",
+        "use": "@vercel/static-build",
+        "config": {
+          "distDir": "build"
+        }
+      },
+      {
+        "src": "ManagementStudent/package.json",
+        "use": "@vercel/node"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/api/(.*)",
+        "dest": "/ManagementStudent/api/$1"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "/managerstudent/$1"
+      }
+    ]
+  }
+  
