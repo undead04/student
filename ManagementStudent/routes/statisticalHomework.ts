@@ -4,7 +4,6 @@ import { repository } from '../models/DTO';
 import { ObjectId } from 'bson';
 import MyHomework, { IMyHomework } from '../models/MyHomework'
 import Homework from '../models/homework';
-import { IStudent } from '../models/Student';
 const router = express.Router();
 const commonPipeline = [
     {

@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import mongoose, { isValidObjectId } from 'mongoose';
 import { repository } from '../models/DTO';
 import ClassRoom from "../models/ClassRoom"
-import validation from '../Validation/ValidationClassRoom';
+import validation from '../validation/ValidationClassRoom';
 import Student from '../models/Student';
 const router = express.Router();
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {

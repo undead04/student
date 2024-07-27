@@ -6,8 +6,8 @@ import dotenv from 'dotenv';
 import subjectRoute from './routes/SubjectRoute';
 import subjectDetailRoute from './routes/SubjectDetailRoute'
 import classRoomRoute from './routes/ClassRoomRoute'
-import studentRoute from './Routes/StudentRoute'
-import teacherRoute from './Routes/TeacherRoute'
+import studentRoute from './routes/StudentRoute'
+import teacherRoute from './routes/TeacherRoute'
 import teacherClassRoomRoute from './routes/TeacherClassRoomRoute'
 import ChangePasswordRoute from './routes/ChangePasswordRoute'
 import myHomeworkRoute from './routes/MyHomeworkRoute'

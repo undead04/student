@@ -2,9 +2,8 @@ import express, { Request, Response, NextFunction } from 'express';
 import mongoose, { isValidObjectId } from 'mongoose';
 import { repository } from '../models/DTO';
 import Subject, { ISubject } from '../models/Subject';
-import validation from '../Validation/validationSubject';
+import validation from '../validation/validationSubject';
 import SubjectDetail, { ISubjectDetail } from '../models/SubjectDetail';
-import { json } from 'body-parser';
 const router = express.Router();
 interface GroupedSubjectDetail {
     subject: ISubject;

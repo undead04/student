@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import mongoose, { isValidObjectId } from 'mongoose';
 import { repository } from '../models/DTO';
 import SubjectDetail from '../models/SubjectDetail';
-import validation from '../Validation/ValidationSubjectDetail';
+import validation from '../validation/ValidationSubjectDetail';
 import { ObjectId } from 'bson';
 const router = express.Router();
 

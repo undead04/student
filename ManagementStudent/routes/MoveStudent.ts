@@ -1,5 +1,4 @@
 import  express,{Request,Response} from "express";
-import User from "../models/User";
 import { repository } from "../models/DTO";
 import Student from './../models/Student';
 const router= express.Router()

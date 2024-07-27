@@ -3,9 +3,6 @@ import { repository } from '../models/DTO';
 import { ObjectId } from 'bson';
 import authenticateJWT, { AuthRequest } from '../middleware/auth';
 import MyExam from '../models/MyExam';
-import { Auth } from 'firebase-admin/auth';
-import User from '../models/User';
-import AppRole from '../models/AppRole';
 import Student from '../models/Student';
 const router = express.Router();
 interface QueryType {

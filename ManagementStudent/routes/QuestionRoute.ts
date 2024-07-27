@@ -3,8 +3,6 @@ import mongoose, { isValidObjectId,PipelineStage } from 'mongoose';
 import { repository } from '../models/DTO';
 import Question, { IQuestion } from '../models/Questions';
 import { ObjectId } from 'bson';
-import Subject from '../models/Subject';
-import { number } from 'joi';
 import authenticateJWT, { AuthRequest } from './../middleware/auth';
 import Teacher from '../models/Teacher';
 const router = express.Router();

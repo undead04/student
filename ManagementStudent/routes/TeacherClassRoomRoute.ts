@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import mongoose, { isValidObjectId } from 'mongoose';
 import { repository } from '../models/DTO';
 import TeacherClassRoom from "../models/TeacherClassRoom"
-import validation from '../Validation/ValidationTeachClassRoom';
+import validation from '../validation/ValidationTeachClassRoom';
 import authenticateJWT, { AuthRequest } from '../middleware/auth';
 import User from '../models/User';
 import AppRole from './../models/AppRole';

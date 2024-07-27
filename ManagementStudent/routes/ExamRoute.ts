@@ -1,10 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { repository } from '../models/DTO';
-import Question from '../models/Questions';
 import Exam from '../models/Exam';
 import { ObjectId } from 'bson';
-import ClassRoom from '../models/ClassRoom';
-import { match } from 'assert';
 import authenticateJWT, { AuthRequest } from '../middleware/auth';
 import Teacher from '../models/Teacher';
 const router = express.Router();

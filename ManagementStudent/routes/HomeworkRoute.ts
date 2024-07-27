@@ -3,8 +3,6 @@ import { repository } from '../models/DTO';
 import Homework from '../models/homework';
 import { ObjectId } from 'bson';
 import authenticateJWT, { AuthRequest } from './../middleware/auth';
-import Student from '../models/Student'
-import { object } from 'joi';
 import Teacher from '../models/Teacher';
 const router = express.Router();
 interface QueryType {

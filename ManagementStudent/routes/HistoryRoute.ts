@@ -2,7 +2,6 @@ import express, { Request, Response, NextFunction } from 'express';
 import mongoose, { isValidObjectId } from 'mongoose';
 import { repository } from '../models/DTO';
 import HistoryUser from '../models/HistoryUser';
-
 const router = express.Router();
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
