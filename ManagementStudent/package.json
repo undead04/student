@@ -1,0 +1,48 @@
+{
+  "name": "managementstudent",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/firebase": "^3.2.1",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "csv-writer": "^1.6.0",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.19.2",
+    "express-validator": "^7.1.0",
+    "firebase": "^10.12.3",
+    "firebase-admin": "^12.2.0",
+    "gridfs-stream": "^1.1.1",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "moment": "^2.30.1",
+    "mongoose": "^8.5.1",
+    "multer": "^1.4.4",
+    "multer-gridfs-storage": "^5.0.2",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/body-parser": "^1.19.5",
+    "@types/express": "^4.17.21",
+    "@types/express-validator": "^3.0.0",
+    "@types/gridfs-stream": "^0.5.39",
+    "@types/joi": "^17.2.3",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/mongoose": "^5.11.97",
+    "@types/multer": "^1.4.11",
+    "@types/node": "^20.14.8",
+    "@types/uuid": "^10.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  },
+  "description": ""
+}
