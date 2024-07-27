@@ -62,8 +62,4 @@ app.use("/api/moveStudent",moveStudentRoute)
 app.use("/api/user",userRouter)
 app.use('/api/statiscalHomework',statisticalHomeworkRouter)
 app.use('/api/statiscalExam',statisticalExamRouter)
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
 export default app
