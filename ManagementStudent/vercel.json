@@ -4,11 +4,11 @@
     {
         "src":"*.ts",
         "use":"@versel/node"
-    },{
-        "routes":[{
-            "src":"/(.*)",
-            "dest":"/"
-        }]
     }
-]
+],
+    "routes":[{
+        "src":"/(.*)",
+        "dest":"/"
+    }]
+
 }
