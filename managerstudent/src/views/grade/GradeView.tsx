@@ -12,7 +12,6 @@ import { toast } from "react-toastify";
 const GradeView = () => {
   const listGrade = ["10", "11", "12"];
   const [listClassRoom, setListClassRoom] = useState<IClassRoom[]>([]);
-  const [open, setOpen] = useState(false);
   const [classRoomModel, setClassRoomModel] = useState<IClassRoomModel>({
     name: "",
     grade: "",
@@ -35,6 +34,7 @@ const GradeView = () => {
     }
   };
   useEffect(() => {
+    document.title = "Quản lí lớp";
     loadData();
   }, []);
   const handleShow = async (id: string, grade: string) => {

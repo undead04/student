@@ -1,37 +1,26 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { IHomeworkModel } from "../../servers/homeworkServer";
-import subjectDetailService, {
-  ISubjectDetail,
-} from "../../servers/subjectDetailServer";
-import { ISelectQuestion } from "./HomeworkCreate";
-import examService from "../../servers/examServer";
 import classService, { IClassRoom } from "../../servers/classServer";
 import studentService, { IStudent } from "../../servers/studentServer";
 interface Prop {
   homeworkModel: IHomeworkModel;
   handlePre: any;
   handleSave: any;
-  setHomeworkModel: any;
+  setSelectStudent: React.Dispatch<React.SetStateAction<string[]>>;
+  selectStudent: string[];
 }
 const HomeworkStep3: React.FC<Prop> = ({
   homeworkModel,
   handleSave,
   handlePre,
-  setHomeworkModel,
+  setSelectStudent,
+  selectStudent,
 }) => {
-  const [subjectDetail, setSubjectDetail] = useState<Partial<ISubjectDetail>>({
-    _id: "",
-  });
   const [classRoom, setClassRoom] = useState<IClassRoom[]>([]);
   const [listStudent, setListStudent] = useState<IStudent[]>([]);
   const [checkAll, setCheckAll] = useState(false);
   useEffect(() => {
-    if (homeworkModel.subjectDetailId) {
-      subjectDetailService
-        .get(homeworkModel.subjectDetailId)
-        .then((res) => setSubjectDetail(res.data));
-    }
     if (homeworkModel.classRoomId) {
       const fetchQuestions = async () => {
         const promises = homeworkModel.classRoomId.map((element) =>
@@ -64,15 +53,9 @@ const HomeworkStep3: React.FC<Prop> = ({
     setCheckAll(isChecked);
     if (isChecked) {
       const allStudentIds = listStudent.map((student) => student._id);
-      setHomeworkModel({
-        ...homeworkModel,
-        studentId: allStudentIds,
-      });
+      setSelectStudent(allStudentIds);
     } else {
-      setHomeworkModel({
-        ...homeworkModel,
-        studentId: [],
-      });
+      setSelectStudent([]);
     }
   };
   const handleStudentCheckboxChange = (
@@ -80,22 +63,16 @@ const HomeworkStep3: React.FC<Prop> = ({
   ) => {
     const studentId = event.target.value;
     const isChecked = event.target.checked;
-
-    setHomeworkModel(() => {
+    setSelectStudent(() => {
       if (isChecked) {
-        return {
-          ...homeworkModel,
-          studentId: [...homeworkModel.studentId, studentId],
-        };
+        return [...selectStudent, studentId];
       } else {
-        return {
-          ...homeworkModel,
-          studentId: homeworkModel.studentId.filter(
-            (id: string) => id !== studentId
-          ),
-        };
+        return selectStudent.filter((id: string) => id !== studentId);
       }
     });
+    if (selectStudent.filter((id: string) => id !== studentId).length === 0) {
+      setCheckAll(false);
+    }
   };
 
   return (
@@ -167,7 +144,7 @@ const HomeworkStep3: React.FC<Prop> = ({
                                       className="form-check-input"
                                       type="checkbox"
                                       value={student._id}
-                                      checked={homeworkModel.studentId.includes(
+                                      checked={selectStudent.includes(
                                         student._id
                                       )}
                                       onChange={handleStudentCheckboxChange}

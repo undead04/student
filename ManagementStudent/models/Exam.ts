@@ -3,20 +3,21 @@ import mongoose,{Schema,Document, Mongoose} from "mongoose"
 import { IClassRoom } from './ClassRoom';
 import { IQuestion } from './Questions';
 import { ISubjectDetail } from "./SubjectDetail";
-import { ref } from "joi";
+import { ref, string } from "joi";
 import { IStudent } from './Student';
+import { ITeacher } from "./Teacher";
 export interface IExam extends Document{
-   _id:string,
    name:string,
    subjectDetailId:ISubjectDetail
    classRoomId:IClassRoom[],
    startDate:Date,
    endDate:Date,
    create_at:Date,
+   schoolYear:string,
+   semester:string,
    questionId:IQuestion[]
    answerDate:Date,
-   studentId:IStudent[],
-   createUserId:mongoose.ObjectId
+   createUserId:ITeacher,
 }
 const ExamSchema:Schema=new Schema({
    name:{type:String,require:true},
@@ -27,8 +28,9 @@ const ExamSchema:Schema=new Schema({
    answerDate:{type:Date},
    create_at:{type:Date},
    questionId:[{type:Schema.ObjectId,ref:"Question"}],
-   studentId:[{type:Schema.ObjectId,ref:"Student"}],
-   createUserId:{type:Schema.ObjectId,ref:"Teacher"}
+   createUserId:{type:Schema.ObjectId,ref:"Teacher"},
+   schoolYear:{type:String},
+   semester:{type:String},
    
 })
 const Exam = mongoose.model<IExam>('Exam', ExamSchema);

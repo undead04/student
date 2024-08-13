@@ -23,6 +23,7 @@ const Header = () => {
   useEffect(() => {
     loadData();
   }, []);
+  console.log(!role?.includes("teacher"), role);
   return (
     <>
       <nav className="navbar navbar-expand-lg  bg-success">
@@ -115,7 +116,9 @@ const Header = () => {
                 <Link
                   className="nav-link link-light"
                   to={"question"}
-                  hidden={!["teacher", "admin"].includes(role?.join("") ?? "")}
+                  hidden={
+                    !["teacher", "admin"].some((item) => role?.includes(item))
+                  }
                 >
                   Ngân hàng câu hỏi
                 </Link>
@@ -124,7 +127,9 @@ const Header = () => {
                 <Link
                   className="nav-link link-light"
                   to={"homework"}
-                  hidden={!["teacher", "admin"].includes(role?.join("") ?? "")}
+                  hidden={
+                    !["teacher", "admin"].some((item) => role?.includes(item))
+                  }
                 >
                   bài tập về nhà
                 </Link>
@@ -133,14 +138,16 @@ const Header = () => {
                 <Link
                   className="nav-link link-light"
                   to={"exam"}
-                  hidden={!["teacher", "admin"].includes(role?.join("") ?? "")}
+                  hidden={
+                    !["teacher", "admin"].some((item) => role?.includes(item))
+                  }
                 >
                   Bài kiểm tra
                 </Link>
               </li>
             </ul>
-            <ul className="navbar-nav">
-              <li className="nav-item dropdown ms-auto">
+            <ul className="navbar-nav dropdown-center">
+              <li className="nav-item dropdown">
                 <a
                   className="nav-link dropdown-toggle link-light"
                   href="#"
@@ -150,7 +157,7 @@ const Header = () => {
                 >
                   {userInfo?.user.name}
                 </a>
-                <ul className="dropdown-menu ">
+                <ul className="dropdown-menu dropdown-menu-end dropdown-menu-start">
                   <li className="nav-item">
                     <Link to={"profile"} className="dropdown-item">
                       Trang cá nhân

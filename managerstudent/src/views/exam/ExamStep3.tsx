@@ -10,26 +10,20 @@ interface Prop {
   examModel: IExamModel;
   handlePre: any;
   handleSave: any;
-  setExamModel: any;
+  setSelectStudent: React.Dispatch<React.SetStateAction<string[]>>;
+  selectStudent: string[];
 }
 const ExamStep3: React.FC<Prop> = ({
   examModel,
   handleSave,
   handlePre,
-  setExamModel,
+  setSelectStudent,
+  selectStudent,
 }) => {
-  const [subjectDetail, setSubjectDetail] = useState<Partial<ISubjectDetail>>({
-    _id: "",
-  });
   const [classRoom, setClassRoom] = useState<IClassRoom[]>([]);
   const [listStudent, setListStudent] = useState<IStudent[]>([]);
   const [checkAll, setCheckAll] = useState(false);
   useEffect(() => {
-    if (examModel.subjectDetailId) {
-      subjectDetailService
-        .get(examModel.subjectDetailId)
-        .then((res) => setSubjectDetail(res.data));
-    }
     if (examModel.classRoomId) {
       const fetchQuestions = async () => {
         const promises = examModel.classRoomId.map((element) =>
@@ -62,15 +56,9 @@ const ExamStep3: React.FC<Prop> = ({
     setCheckAll(isChecked);
     if (isChecked) {
       const allStudentIds = listStudent.map((student) => student._id);
-      setExamModel({
-        ...examModel,
-        studentId: allStudentIds,
-      });
+      setSelectStudent(allStudentIds);
     } else {
-      setExamModel({
-        ...examModel,
-        studentId: [],
-      });
+      setSelectStudent([]);
     }
   };
   const handleStudentCheckboxChange = (
@@ -78,28 +66,17 @@ const ExamStep3: React.FC<Prop> = ({
   ) => {
     const studentId = event.target.value;
     const isChecked = event.target.checked;
-    setExamModel(() => {
+    setSelectStudent(() => {
       if (isChecked) {
-        return {
-          ...examModel,
-          studentId: [...examModel.studentId, studentId],
-        };
+        return [...selectStudent, studentId];
       } else {
-        return {
-          ...examModel,
-          studentId: examModel.studentId.filter(
-            (id: string) => id !== studentId
-          ),
-        };
+        return selectStudent.filter((id: string) => id !== studentId);
       }
     });
-    if (
-      examModel.studentId.filter((id: string) => id !== studentId).length == 0
-    ) {
+    if (selectStudent.filter((id: string) => id !== studentId).length === 0) {
       setCheckAll(false);
     }
   };
-
   return (
     <>
       <div className="container mt-3 h-75">
@@ -169,7 +146,7 @@ const ExamStep3: React.FC<Prop> = ({
                                       className="form-check-input"
                                       type="checkbox"
                                       value={student._id}
-                                      checked={examModel.studentId.includes(
+                                      checked={selectStudent.includes(
                                         student._id
                                       )}
                                       onChange={handleStudentCheckboxChange}

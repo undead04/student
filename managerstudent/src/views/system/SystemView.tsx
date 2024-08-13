@@ -10,7 +10,6 @@ import LoadingReact from "../../Components/LoadingReact";
 import firebaseService from "../../firebase/firebaseServices";
 import { toast } from "react-toastify";
 const SystemView = () => {
-  const theme = ["light", "dark"];
   const schoolYear = [
     "2020-2021",
     "2021-2022",
@@ -46,6 +45,7 @@ const SystemView = () => {
     }
   };
   useEffect(() => {
+    document.title = "Quản lí hệ thống";
     loadData();
   }, []);
   const handleSelect = (e: string | string[], name: string) => {
@@ -126,8 +126,8 @@ const SystemView = () => {
                 }))}
                 defaultValue={[
                   {
-                    label: system.schoolYear ?? "",
-                    value: system.schoolYear ?? "",
+                    label: systemModel.schoolYear ?? "",
+                    value: systemModel.schoolYear ?? "",
                   },
                 ]}
                 name="schoolYear"
@@ -144,8 +144,8 @@ const SystemView = () => {
                 }))}
                 defaultValue={[
                   {
-                    label: system.semester ?? "",
-                    value: system.semester ?? "",
+                    label: systemModel.semester ?? "",
+                    value: systemModel.semester ?? "",
                   },
                 ]}
                 name="semester"

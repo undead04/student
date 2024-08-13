@@ -2,11 +2,13 @@ import { url } from "inspector";
 import api from "./api";
 import ResponseWrapper from "./responseWrapper";
 import { IMyExam } from "./myExamServer";
+import { IPage } from "../models/Page";
 
 export interface IStatiscalExam{
     done:number;
     unfinished:number;
-    exam:IMyExam[]
+    exam:IMyExam[];
+    page:IPage;
 }
 const get=(id:string,classRoomId?:string,page?:number)=>{
     const params = new URLSearchParams();

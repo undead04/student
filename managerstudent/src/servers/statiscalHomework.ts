@@ -3,11 +3,13 @@ import api from "./api";
 import { IHomework } from "./homeworkServer"
 import ResponseWrapper from "./responseWrapper";
 import { IMyHomework } from "./myHomeworkServer";
+import { IPage } from "../models/Page";
 
 export interface IStatiscalHomework{
     done:number;
     unfinished:number;
     homework:IMyHomework[]
+    page:IPage
 }
 const get=(id:string,classRoomId?:string,page?:number)=>{
     const params = new URLSearchParams();

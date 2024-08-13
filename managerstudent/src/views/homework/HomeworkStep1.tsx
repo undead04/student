@@ -1,11 +1,10 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import Input from "../../Components/Input";
-import { IListSubject, ISubject } from "../../servers/subjectServer";
+import { ISubject } from "../../servers/subjectServer";
 import SelectReact from "../../Components/SelectReact";
 import { IClassRoom } from "../../servers/classServer";
 import { IHomeworkModel } from "../../servers/homeworkServer";
-import { Label } from "flowbite-react";
 import LoadingReact from "../../Components/LoadingReact";
 interface Prop {
   handleChange: any;
@@ -33,16 +32,16 @@ const HomeworkStep1: React.FC<Prop> = ({
   const [loadingForm, setLoadingForm] = useState(true);
   useEffect(() => {
     if (examModel.classRoomId.length > 0) {
-      examModel.classRoomId.forEach((element) => {
-        let objectClassRoom = listClassRoom.find((item) => item._id == element);
-        if (objectClassRoom) {
-          setClassRoom([...classRoom, objectClassRoom]);
-        }
-      });
+      const objectClassRoom = listClassRoom.filter((item) =>
+        examModel.classRoomId.includes(item._id)
+      );
+      setClassRoom(objectClassRoom);
+    } else {
+      setClassRoom([]);
     }
-
     setLoadingForm(false);
-  }, []);
+  }, [examModel.classRoomId]);
+  console.log(classRoom);
   return (
     <>
       <div className="container mt-3" style={{ maxWidth: 500 }}>
@@ -63,7 +62,7 @@ const HomeworkStep1: React.FC<Prop> = ({
                   label="Ngày bắt đầu"
                   value={examModel.startDate.toString()}
                   onChange={handleChange}
-                  type="date"
+                  type="datetime-local"
                 />
               </div>
               <div className="col-12  col-lg-6">
@@ -72,7 +71,7 @@ const HomeworkStep1: React.FC<Prop> = ({
                   label="Ngày kết thúc"
                   value={examModel.endDate.toString()}
                   onChange={handleChange}
-                  type="date"
+                  type="datetime-local"
                 />
               </div>
               <div className="col-12 col-lg-6">
@@ -87,7 +86,7 @@ const HomeworkStep1: React.FC<Prop> = ({
                     value={filterModel.subjectId}
                   >
                     <option value="" disabled hidden>
-                      Chọn lớp
+                      Chọn môn học
                     </option>
                     {listSubject.map((item, index) => (
                       <option value={item._id} key={index}>
@@ -100,7 +99,7 @@ const HomeworkStep1: React.FC<Prop> = ({
               <div className="col-12  col-lg-6">
                 <div className="form-group">
                   <label htmlFor="" className="form-label">
-                    Khối lớp
+                    Khối
                   </label>
                   <select
                     className="form-select"
@@ -109,11 +108,11 @@ const HomeworkStep1: React.FC<Prop> = ({
                     onChange={handleChangeFilter}
                   >
                     <option value="" disabled hidden>
-                      Chọn khối lớp
+                      Chọn khối
                     </option>
                     {listGrade.map((item, index) => (
                       <option value={item} key={index}>
-                        Lớp {item}
+                        Khối {item}
                       </option>
                     ))}
                   </select>

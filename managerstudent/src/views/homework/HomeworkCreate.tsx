@@ -1,20 +1,12 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
-import Input from "../../Components/Input";
 import subjectService, { ISubject } from "../../servers/subjectServer";
-import questionService, {
-  IQuestion,
-  IQuestionModel,
-} from "../../servers/questionServer";
+import questionService, { IQuestion } from "../../servers/questionServer";
 import subjectDetailService, {
   ISubjectDetail,
 } from "../../servers/subjectDetailServer";
-import { useNavigate, useParams } from "react-router-dom";
-import homeworkServer, {
-  IHomework,
-  IHomeworkModel,
-} from "../../servers/homeworkServer";
-import classService, { IClassRoom } from "../../servers/classServer";
+import { useNavigate } from "react-router-dom";
+import { IHomeworkModel } from "../../servers/homeworkServer";
 import ModalReact from "../../Components/ModalReact";
 import HomewordQuestion from "./HomeworkQuestion";
 import HomeworkStep1 from "./HomeworkStep1";
@@ -22,7 +14,15 @@ import HomeworkStep2 from "./HomeworkStep2";
 import homeworkService from "../../servers/homeworkServer";
 import HomeworkStep3 from "./HomeworkStep3";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
+import teacherClassRoomService from "../../servers/teacherClassRoomServer";
+import { IClassRoom } from "../../servers/classServer";
+import { IStudent } from "../../servers/studentServer";
 import { error } from "console";
+import myHomeworkService, {
+  IMyHomeworkModel,
+} from "../../servers/myHomeworkServer";
 export interface ISelectQuestion {
   tableOfContents: string;
   question: string[];
@@ -35,7 +35,6 @@ const HomeworkCreate = () => {
     startDate: new Date().toISOString().split("T")[0],
     endDate: new Date().toISOString().split("T")[0],
     questionId: [],
-    studentId: [],
   });
   const [checkDifferentQuestion, setCheckDifferentQuestion] =
     useState<boolean>(true);
@@ -58,15 +57,34 @@ const HomeworkCreate = () => {
   const [LoadingForm, setLoadingForm] = useState(true);
   const [listSubject, setListSubject] = useState<ISubject[]>([]);
   const [subjectDetail, setSubjectDetail] = useState<ISubjectDetail[]>([]);
-  const listGrade = ["10", "11", "12"];
+  const [listGrade, setListGrade] = useState<string[]>([]);
   const [listClassRoom, setListClassRoom] = useState<IClassRoom[]>([]);
   const navigate = useNavigate();
+  const [selectStudent, setSelectStudent] = useState<string[]>([]);
   const [selectQuestion, setSelectQuestion] = useState<ISelectQuestion[]>([]);
+  const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+  const role = userInfo?.user.role;
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const subjectResponse = await subjectService.list();
-        setListSubject(subjectResponse.data.subject);
+        if (role?.includes("admin")) {
+          const subjectResponse = await subjectService.list();
+          setListSubject(subjectResponse.data.subject);
+        } else {
+          teacherClassRoomService.getStudent().then((res) => {
+            const uniqueSubjectMap: Map<string, ISubject> = new Map();
+            res.data.teacherClassRoom
+              .flatMap((item) => item.subjectDetail.subject)
+              .forEach((subject) => {
+                uniqueSubjectMap.set(subject._id, subject); // Sử dụng id làm khóa để loại bỏ trùng lặp
+              });
+
+            const uniqueSubject: ISubject[] = Array.from(
+              uniqueSubjectMap.values()
+            );
+            setListSubject(uniqueSubject);
+          });
+        }
       } catch (error: any) {
         console.log(error);
       }
@@ -141,24 +159,65 @@ const HomeworkCreate = () => {
   useEffect(() => {
     try {
       if (filterModel.grade) {
-        classService
-          .list(filterModel.grade)
-          .then((res) => setListClassRoom(res.data));
+        teacherClassRoomService
+          .getStudent(undefined, filterModel.subjectId, filterModel.grade)
+          .then((res) => {
+            const uniqueClassRooms: IClassRoom[] = Array.from(
+              new Set<IClassRoom>(
+                res.data.teacherClassRoom.flatMap(
+                  (item: { classRoom: IClassRoom }) => item.classRoom
+                )
+              )
+            );
+            setListClassRoom(uniqueClassRooms);
+          });
+      } else {
+        setListClassRoom([]);
       }
     } catch (error: any) {
       console.log(error);
     }
   }, [filterModel.grade]);
+  useEffect(() => {
+    if (filterModel.subjectId) {
+      teacherClassRoomService
+        .getStudent(undefined, filterModel.subjectId)
+        .then((res) => {
+          const uniqueGradeMap: Map<string, string> = new Map();
+          res.data.teacherClassRoom
+            .flatMap((item) => item.subjectDetail.grade)
+            .forEach((grade) => {
+              uniqueGradeMap.set(grade.toString(), grade.toString()); // Sử dụng id làm khóa để loại bỏ trùng lặp
+            });
+          const uniqueGrade: string[] = Array.from(uniqueGradeMap.values());
+          setListGrade(uniqueGrade);
+        });
+    }
+  }, [filterModel.subjectId]);
   const handleSelect = (e: string | string[], name: string) => {
+    console.log(e, name);
     setHomeworkModel({ ...homeworkModel, [name]: e });
   };
   const handleChangeFilter = (
     e: React.FormEvent<HTMLSelectElement | HTMLInputElement>
   ) => {
-    setFilterModel({
+    let updatedFilterModel = {
       ...filterModel,
       [e.currentTarget.name]: e.currentTarget.value,
-    });
+    };
+    if (e.currentTarget.name === "subjectId") {
+      updatedFilterModel.grade = "";
+      setHomeworkModel({
+        ...homeworkModel,
+        classRoomId: [],
+      });
+    } else if (e.currentTarget.name === "grade") {
+      setHomeworkModel({
+        ...homeworkModel,
+        classRoomId: [],
+      });
+    }
+    setFilterModel(updatedFilterModel);
   };
   const handleChange = (
     e: React.FormEvent<
@@ -283,7 +342,8 @@ const HomeworkCreate = () => {
       case 2:
         return (
           <HomeworkStep3
-            setHomeworkModel={setHomeworkModel}
+            setSelectStudent={setSelectStudent}
+            selectStudent={selectStudent}
             homeworkModel={homeworkModel}
             handleSave={() => handleSave("")}
             handlePre={handlePre}
@@ -304,7 +364,24 @@ const HomeworkCreate = () => {
   const handleSave = async (id: string) => {
     if (id === "") {
       try {
-        await homeworkService.add(homeworkModel);
+        const responseHomework = await homeworkService.add(homeworkModel);
+        const responseQuestion = await homeworkService.get(
+          responseHomework.data
+        );
+        console.log(responseQuestion);
+        const myHomeworkPromises = selectStudent.map(async (element) => {
+          const myHomeworkModel: IMyHomeworkModel = {
+            homeworkId: responseHomework.data,
+            answers: responseQuestion.data.question.map((item) => ({
+              questionId: item._id,
+              answer: [],
+            })),
+            userId: element,
+          };
+
+          return myHomeworkService.add(myHomeworkModel);
+        });
+        await Promise.all(myHomeworkPromises);
         toast.done("Tạo bài tập về nhà thành công");
         handleNavigate();
       } catch (error: any) {

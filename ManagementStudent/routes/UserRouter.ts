@@ -1,8 +1,8 @@
 import express, { Request, Response, NextFunction, Router } from 'express';
 import authenticateJWT, { AuthRequest } from '../middleware/auth';
-import { repository } from '../models/DTO';
+import { repository } from '../models/DTO/DTO';
 import User from '../models/User';
-import AppRole from '../models/AppRole';
+import AppRole from '../models/DTO/AppRole';
 import Student from '../models/Student';
 import { ObjectId } from 'bson';
 import Teacher from '../models/Teacher';

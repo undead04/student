@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import mongoose, { isValidObjectId } from 'mongoose';
-import { repository } from '../models/DTO';
+import { repository } from '../models/DTO/DTO';
 import System from '../models/System';
 const router = express.Router();
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {

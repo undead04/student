@@ -3,6 +3,7 @@ import ResponseWrapper from "./responseWrapper";
 import { IPage } from '../models/Page';
 import { IStudent } from "./studentServer";
 import { IExam } from "./examServer";
+import { IMyHomework } from "./myHomeworkServer";
 export interface IMyExam{
     _id: string;
     exam:IExam,
@@ -12,6 +13,7 @@ export interface IMyExam{
       questionId:string;
       answer: string[];
      }[],
+     status:boolean
     
 }
 export interface IMyExamModel {
@@ -20,6 +22,7 @@ export interface IMyExamModel {
         questionId:string;
         answer: string[];
       }[],
+      userId:string
 
 }
 export interface IListMyExam{
@@ -67,11 +70,33 @@ const remove = (id: string) => {
     .delete<ResponseWrapper<string>>(`${api.url.myExam}/${id}`)
     .then((res) => res.data);
 };
+const getListStudent=(subjectDetailId?:string,status?:boolean,page?:number,pageSize?:number)=>{
+  const params = new URLSearchParams();
+    let url=`${api.url.myExam}/student`
+  if (subjectDetailId) {
+    params.append("subjectDetailId", String(subjectDetailId));
+  }
+  if (status!=undefined) {
+    params.append("status", String(status));
+  }
+  if (page) {
+    params.append("page", String(page));
+  }
+  if (pageSize) {
+    params.append("pageSize", String(pageSize));
+  }
+  // Thêm các tham số vào URL nếu chúng tồn tại
+  if (params.toString()) {
+    url += "?" + params.toString();
+  }
+  return api.get<ResponseWrapper<IListMyExam>>(url).then(res=>res.data)
+}
 const myExamService = {
   list,
   get,
   add,
   update,
   remove,
+  getListStudent
 };
 export default myExamService;

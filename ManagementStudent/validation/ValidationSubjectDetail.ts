@@ -19,7 +19,7 @@ const validateRequest = (req: Request, res: Response, next: NextFunction) => {
 };
 
 const uniqueCode: CustomValidator = async (value, { req }) => {
-    if (req.body.subjectId && req.body.className) {
+    if (req.body.subjectId && req.body.grade) {
         const existingClass = await SubjectDetail.findOne({
             subjectId: req.body.subjectId,
             grade: req.body.grade

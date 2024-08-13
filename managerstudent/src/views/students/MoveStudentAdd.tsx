@@ -18,6 +18,7 @@ const MoveStudentAdd: React.FC<Prop> = ({
 }) => {
   const [listClassRoom, setListClassRoom] = useState<IClassRoom[]>([]);
   useEffect(() => {
+    document.title = "Chuyển lớp cho học sinh";
     if (grade) {
       classService.list(grade).then((res) => setListClassRoom(res.data));
     }

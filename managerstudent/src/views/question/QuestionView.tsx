@@ -1,9 +1,6 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
-import subjectService, {
-  IListSubject,
-  ISubject,
-} from "../../servers/subjectServer";
+import subjectService, { ISubject } from "../../servers/subjectServer";
 import { FilterQuestionModel } from "../../models/FilterModel";
 import questionService, {
   IListQuestion,
@@ -18,6 +15,7 @@ import QuesionAdd from "./QuestionAdd";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
+import teacherClassRoomService from "../../servers/teacherClassRoomServer";
 const QuestionView = () => {
   const navigate = useNavigate();
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
@@ -30,7 +28,8 @@ const QuestionView = () => {
     _id: "",
     answer: [],
   });
-  const listGrade = ["10", "11", "12"];
+  const [listGrade, setListGrade] = useState<string[]>([]);
+  const [loadingTable, setLoadingTable] = useState(true);
   const listLevel = ["Thấp", "Trung bình", "Cao"];
   const [tableOfContents, setTableOfContents] = useState<string[]>([]);
   const [show, setshow] = useState(false);
@@ -67,7 +66,7 @@ const QuestionView = () => {
         filterModel.level.toString(),
         filterModel.tableOfContents
       );
-      toast.done("Xóa câu hỏi thành công");
+      toast.success("Xóa câu hỏi thành công");
     } catch (error: any) {
       toast.error("Xóa câu hỏi thất bại");
       console.log(error);
@@ -94,14 +93,35 @@ const QuestionView = () => {
     page?: string
   ) => {
     try {
-      if (!role?.includes("teacher")) {
-        questionService
-          .list(search, subjectId, grade, level, tableOfContents, page)
-          .then((res) => setListQuestion(res.data));
+      if (role?.includes("admin")) {
+        await questionService
+          .list(
+            search,
+            subjectId,
+            grade,
+            level,
+            tableOfContents,
+            undefined,
+            undefined,
+            page
+          )
+          .then((res) => {
+            setListQuestion(res.data);
+            setLoadingTable(false);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       } else {
-        questionService
+        await questionService
           .getTeacher(search, subjectId, grade, level, tableOfContents, page)
-          .then((res) => setListQuestion(res.data));
+          .then((res) => {
+            setListQuestion(res.data);
+            setLoadingTable(false); // Tắt trạng thái loading khi nhận được phản hồi thành công
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       }
     } catch (error: any) {
       console.log(error);
@@ -109,18 +129,55 @@ const QuestionView = () => {
   };
   useEffect(() => {
     if (filterModel.subjectId && filterModel.grade) {
-      subjectDetailService
-        .list(filterModel.subjectId, filterModel.grade)
-        .then((res) =>
-          setTableOfContents(res.data.flatMap((item) => item.tableOfContents))
-        );
+      try {
+        subjectDetailService
+          .list(filterModel.subjectId, filterModel.grade)
+          .then((res) =>
+            setTableOfContents(res.data.flatMap((item) => item.tableOfContents))
+          );
+      } catch (error: any) {
+        console.log(error);
+      }
+    } else {
+      setTableOfContents([]);
     }
-    setLoading(false);
   }, [filterModel.subjectId, filterModel.grade]);
   useEffect(() => {
-    subjectService.list().then((res) => setListSubject(res.data.subject));
+    if (role?.includes("admin")) {
+      subjectService.list().then((res) => setListSubject(res.data.subject));
+      setLoading(false);
+    } else {
+      teacherClassRoomService.getStudent().then((res) => {
+        const uniqueSubjectMap: Map<string, ISubject> = new Map();
+        res.data.teacherClassRoom
+          .flatMap((item) => item.subjectDetail.subject)
+          .forEach((subject) => {
+            uniqueSubjectMap.set(subject._id, subject); // Sử dụng id làm khóa để loại bỏ trùng lặp
+          });
+        const uniqueSubject: ISubject[] = Array.from(uniqueSubjectMap.values());
+        setListSubject(uniqueSubject);
+        setLoading(false);
+      });
+    }
   }, []);
   useEffect(() => {
+    if (filterModel.subjectId) {
+      teacherClassRoomService
+        .getStudent(undefined, filterModel.subjectId)
+        .then((res) => {
+          const uniqueGradeMap: Map<string, string> = new Map();
+          res.data.teacherClassRoom
+            .flatMap((item) => item.subjectDetail.grade)
+            .forEach((grade) => {
+              uniqueGradeMap.set(grade.toString(), grade.toString()); // Sử dụng id làm khóa để loại bỏ trùng lặp
+            });
+          const uniqueGrade: string[] = Array.from(uniqueGradeMap.values());
+          setListGrade(uniqueGrade);
+        });
+    }
+  }, [filterModel.subjectId]);
+  useEffect(() => {
+    document.title = "Tạo bài tập về nhà";
     const params: Record<string, string> = {};
     if (filterModel.subjectId) {
       params["subjectId"] = String(filterModel.subjectId);
@@ -138,6 +195,7 @@ const QuestionView = () => {
       params["page"] = String(filterModel.page);
     }
     setSearchParams(params);
+    document.title = "Ngân hàng câu hỏi";
     loadData(
       "",
       filterModel.subjectId,
@@ -148,10 +206,17 @@ const QuestionView = () => {
     );
   }, [filterModel]);
   const handleSelectFilter = (e: React.FormEvent<HTMLSelectElement>) => {
-    setFilterModel({
+    let updatedFilterModel = {
       ...filterModel,
       [e.currentTarget.name]: e.currentTarget.value,
-    });
+    };
+    if (e.currentTarget.name === "subjectId") {
+      updatedFilterModel.grade = "";
+      updatedFilterModel.tableOfContents = "";
+    } else if (e.currentTarget.name === "grade") {
+      updatedFilterModel.tableOfContents = "";
+    }
+    setFilterModel(updatedFilterModel);
   };
   const handlePageChange = (page: string) => {
     setFilterModel({ ...filterModel, page: page });
@@ -163,6 +228,7 @@ const QuestionView = () => {
       navigate(`/question/edit/${id}`);
     }
   };
+  console.log(filterModel.grade);
   return (
     <>
       <ModalReact
@@ -194,7 +260,7 @@ const QuestionView = () => {
                   <select
                     className="form-select"
                     name="subjectId"
-                    defaultValue={""}
+                    value={filterModel.subjectId}
                     onChange={handleSelectFilter}
                   >
                     <option value="" disabled hidden>
@@ -211,16 +277,16 @@ const QuestionView = () => {
               <div className="col-12 col-sm-4 col-lg-3">
                 <div className="form-group">
                   <label htmlFor="" className="form-label">
-                    Lớp học
+                    Chọn khối
                   </label>
                   <select
                     className="form-select"
                     name="grade"
-                    defaultValue={""}
+                    value={filterModel.grade}
                     onChange={handleSelectFilter}
                   >
                     <option value="" disabled hidden>
-                      Chọn khối lớp
+                      Chọn khối
                     </option>
                     {listGrade.map((item, index) => (
                       <option value={item} key={index}>
@@ -238,7 +304,7 @@ const QuestionView = () => {
                   <select
                     className="form-select"
                     name="level"
-                    defaultValue={""}
+                    value={filterModel.level}
                     onChange={handleSelectFilter}
                   >
                     <option value="" disabled hidden>
@@ -260,7 +326,7 @@ const QuestionView = () => {
                   <select
                     className="form-select"
                     name="tableOfContents"
-                    defaultValue={""}
+                    value={filterModel.tableOfContents}
                     onChange={handleSelectFilter}
                   >
                     <option value="" disabled hidden>
@@ -275,6 +341,8 @@ const QuestionView = () => {
                 </div>
               </div>
             </div>
+          </div>
+          <div className="container">
             <div className="row mt-3">
               <div className="col-12 text-end">
                 <button
@@ -285,63 +353,111 @@ const QuestionView = () => {
                 </button>
               </div>
             </div>
-            <div className="row mt-3">
-              <table className="table table-bordered">
-                <thead className="table-success">
-                  <tr>
-                    <th scope="col">STT</th>
-                    <th scope="col">Mức độ</th>
-                    <th scope="col">Cập nhập lần cuối</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {listQuestion?.question.map((item, index) => (
-                    <tr key={index}>
-                      <th scope="row">
-                        {(Number(filterModel.page) - 1) * filterModel.pageSize +
-                          index +
-                          1}
-                      </th>
-                      <td>
-                        {item.level === 0
-                          ? "Thấp"
-                          : item.level === 1
-                          ? "Trùng bình"
-                          : "Cao"}
-                      </td>
-                      <td>{item.create_at.toString().split("T")[0]}</td>
-
-                      <td>
-                        <button
-                          className="btn btn-info me-2"
-                          onClick={() => handleShowSeen(item._id)}
-                        >
-                          <i className="fa-solid fa-eye"></i>
-                        </button>
-                        <button
-                          className="btn btn-warning me-2"
-                          onClick={() => handleNavigateCreate(item._id)}
-                        >
-                          <i className="fa-solid fa-pen-to-square"></i>
-                        </button>
-                        <button
-                          className="btn btn-danger me-2"
-                          onClick={() => handleShow(item._id)}
-                        >
-                          <i className="fa-solid fa-trash"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <PaginationRect
-                onChangePage={handlePageChange}
-                totalPage={listQuestion?.page.totalPage ?? 0}
-                currentPage={listQuestion?.page.currentPage ?? 0}
-              />
-            </div>
+            {loadingTable === false ? (
+              listQuestion && listQuestion.question.length > 0 ? (
+                <>
+                  <div className="row mt-3">
+                    <div className="col-12">
+                      <table className="table table-bordered">
+                        <thead className="table-success">
+                          <tr className="text-center fw-bolder">
+                            <th className="align-middle" scope="col">
+                              STT
+                            </th>
+                            <th className="align-middle" scope="col">
+                              Môn học
+                            </th>
+                            <th className="align-middle" scope="col">
+                              Mức độ
+                            </th>
+                            <th className="align-middle" scope="col">
+                              Người tạo
+                            </th>
+                            <th className="align-middle" scope="col">
+                              Loại câu hỏi
+                            </th>
+                            <th className="align-middle" scope="col">
+                              Cập nhập lần cuối
+                            </th>
+                            <th className="align-middle"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {listQuestion?.question.map((item, index) => (
+                            <tr key={index} className="text-center">
+                              <th className=" ">
+                                {(Number(filterModel.page) - 1) *
+                                  filterModel.pageSize +
+                                  index +
+                                  1}
+                              </th>
+                              <td className="align-middle">
+                                {item.subjectDetail.subject.name}
+                              </td>
+                              <td className="align-middle">
+                                {item.level === 0
+                                  ? "Thấp"
+                                  : item.level === 1
+                                  ? "Trùng bình"
+                                  : "Cao"}
+                              </td>
+                              <td className="align-middle">
+                                {item.teacher.name}
+                              </td>
+                              <td className="align-middle">
+                                {item.create_at.toString().split("T")[0]}
+                              </td>
+                              <td className="align-middle">
+                                {item.isMul
+                                  ? "Trắc nghiệm có nhiều đáp án"
+                                  : "Trắc nghiệm có  1 đáp án"}
+                              </td>
+                              <td className="text-start">
+                                <button
+                                  className="btn btn-info me-2"
+                                  onClick={() => handleShowSeen(item._id)}
+                                >
+                                  <i className="fa-solid fa-eye"></i>
+                                </button>
+                                <button
+                                  className="btn btn-warning me-2"
+                                  onClick={() => handleNavigateCreate(item._id)}
+                                >
+                                  <i className="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button
+                                  className="btn btn-danger me-2"
+                                  onClick={() => handleShow(item._id)}
+                                >
+                                  <i className="fa-solid fa-trash"></i>
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="col-12">
+                      <PaginationRect
+                        onChangePage={handlePageChange}
+                        totalPage={listQuestion?.page.totalPage ?? 0}
+                        currentPage={listQuestion?.page.currentPage ?? 0}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="row w-100 mt-5">
+                    <div className="col text-center">
+                      <h1>Không có câu hỏi nào</h1>
+                    </div>
+                  </div>
+                </>
+              )
+            ) : (
+              <LoadingReact />
+            )}
           </div>
         </>
       ) : (

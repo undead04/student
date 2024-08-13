@@ -46,7 +46,6 @@ const SelectReact: React.FC<Prop> = ({
       overflowY: "auto", // Thêm cuộn dọc
     }),
   };
-
   return (
     <div className="form-group">
       {label ? (
@@ -55,10 +54,9 @@ const SelectReact: React.FC<Prop> = ({
           <sup className="text-danger fw-bold">*</sup>:
         </label>
       ) : null}
-
       <Select
-        defaultValue={defaultValue}
         isMulti={isMul}
+        value={defaultValue}
         options={option}
         className="basic-multi-select"
         classNamePrefix="select"

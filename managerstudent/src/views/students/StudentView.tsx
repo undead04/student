@@ -113,6 +113,7 @@ const StudentView = () => {
       }
     });
     setSearchParams(params);
+    document.title = "Quản lí học sinh";
   }, [filterModel]);
   useEffect(() => {
     if (filterModel.classRoom) {
@@ -435,7 +436,10 @@ const StudentView = () => {
           <>
             <div className="row mt-3">
               <div className="col">
-                <p>Danh sách học sinh khối lớp {className}</p>
+                <p>
+                  Danh sách học sinh khối lớp {className} -{" "}
+                  {listStudent?.page.totalDocument} học sinh
+                </p>
               </div>
             </div>
             <div className="row g-2">

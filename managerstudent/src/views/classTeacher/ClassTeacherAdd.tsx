@@ -6,6 +6,7 @@ import SelectReact from "../../Components/SelectReact";
 import { ITeacherClassRoomModel } from "../../servers/teacherClassRoomServer";
 import { ITeacher } from "../../servers/teacherServer";
 import { ISubjectDetail } from "../../servers/subjectDetailServer";
+import { ISubject } from "../../servers/subjectServer";
 
 interface PropAdd {
   defaultValue: ITeacherClassRoomModel;
@@ -22,19 +23,28 @@ const ClassTeacherAdd: React.FC<PropAdd> = ({
   listSubject,
   listTeacher,
 }) => {
-  const getDefaultValue = (
-    defaultId: string | undefined,
-    list: any[],
-    labelField: string
-  ) => {
-    if (!defaultId) return [];
-    const item = list.find((item) => item._id === defaultId);
-    return item ? [{ value: defaultId, label: item[labelField] }] : [];
-  };
-  console.log(
-    listSubject.find((item) => item._id === defaultValue.subjectDetailId)
-      ?.subject.name ?? ""
-  );
+  const [subjectDetail, setSubjectDetail] = useState<Partial<ISubjectDetail>>();
+  const [teacher, setTeacher] = useState<Partial<ITeacher>>();
+  useEffect(() => {
+    if (defaultValue.subjectDetailId) {
+      const objectSubjectDetail = listSubject.find(
+        (item) => item._id === defaultValue.subjectDetailId
+      );
+      setSubjectDetail(objectSubjectDetail);
+    } else {
+      setSubjectDetail(undefined);
+    }
+    if (defaultValue.teacherId) {
+      const objectTeacher = listTeacher.find(
+        (item) => item._id === defaultValue.teacherId
+      );
+      setTeacher(objectTeacher);
+    } else {
+      setTeacher(undefined);
+    }
+    console.log(defaultValue.teacherId);
+  }, [defaultValue]);
+
   return (
     <>
       <div className="row g-3">
@@ -52,10 +62,7 @@ const ClassTeacherAdd: React.FC<PropAdd> = ({
             defaultValue={[
               {
                 value: defaultValue.subjectDetailId,
-                label:
-                  listSubject.find(
-                    (item) => item._id === defaultValue.subjectDetailId
-                  )?.subject.name ?? "",
+                label: subjectDetail?.subject?.name ?? "",
               },
             ]}
           />
@@ -66,16 +73,23 @@ const ClassTeacherAdd: React.FC<PropAdd> = ({
             label="Giáo viên"
             name="teacherId"
             nameHandle={nameFCChangeSelect}
-            option={listTeacher.map((item, index) => ({
-              value: item._id,
-              label: item.name,
-            }))}
+            option={listTeacher
+              .filter((item) =>
+                item.subject
+                  .map((item) => item._id)
+                  .includes(subjectDetail?.subject?._id ?? "")
+              )
+              .map((item, index) => ({
+                value: item._id,
+                label: item.name,
+              }))}
             message={message.teacherId}
-            defaultValue={getDefaultValue(
-              defaultValue.teacherId,
-              listTeacher,
-              "name"
-            )}
+            defaultValue={[
+              {
+                label: teacher?.name ?? "",
+                value: teacher?._id ?? "",
+              },
+            ]}
           />
         </div>
       </div>

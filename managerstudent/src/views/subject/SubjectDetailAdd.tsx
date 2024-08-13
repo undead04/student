@@ -53,7 +53,7 @@ const SubjectDetailAdd: React.FC<PropAdd> = ({
       setSubject(objectSubject);
     }
     setLoading(false);
-  }, []);
+  }, [defaultValue.subjectId]);
   return (
     <>
       {loading === false ? (

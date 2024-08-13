@@ -34,16 +34,15 @@ const ExamStep1: React.FC<Prop> = ({
   const [loadingForm, setLoadingForm] = useState(true);
   useEffect(() => {
     if (examModel.classRoomId.length > 0) {
-      examModel.classRoomId.forEach((element) => {
-        let objectClassRoom = listClassRoom.find((item) => item._id == element);
-        if (objectClassRoom) {
-          setClassRoom([...classRoom, objectClassRoom]);
-        }
-      });
+      const objectClassRoom = listClassRoom.filter((item) =>
+        examModel.classRoomId.includes(item._id)
+      );
+      setClassRoom(objectClassRoom);
+    } else {
+      setClassRoom([]);
     }
-
     setLoadingForm(false);
-  }, []);
+  }, [examModel.classRoomId]);
   return (
     <>
       <div className="container mt-3">

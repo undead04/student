@@ -105,9 +105,6 @@ const ClassTeacher = () => {
   }, [filterModel.grade]);
   useEffect(() => {
     try {
-      subjectDetailService
-        .list(undefined, filterModel.grade)
-        .then((res) => setListSubjectDetail(res.data));
       SystemService.get().then((res) => setSystem(res.data));
       teacherService.list().then((res) => setListTeacher(res.data.teacher));
     } catch (error: any) {
@@ -123,6 +120,12 @@ const ClassTeacher = () => {
       params["classRoom"] = String(filterModel.classRoom);
     }
     setSearchParams(params);
+    document.title = "Quản lí gán giáo viên cho lớp học";
+    if (filterModel.classRoom && filterModel.grade) {
+      subjectDetailService
+        .list(undefined, filterModel.grade)
+        .then((res) => setListSubjectDetail(res.data));
+    }
   }, [filterModel.classRoom, filterModel.grade]);
   const handleShow = async (id: string) => {
     setTeacherClassRoom({
@@ -225,8 +228,9 @@ const ClassTeacher = () => {
   };
   const handleSelect = (e: string | string[], name: string) => {
     let updatedModel = { ...teacherClassRoomModel, [name]: e };
-    if (name === "subjectId") {
+    if (name === "subjectDetailId") {
       updatedModel.teacherId = "";
+      console.log(updatedModel.teacherId);
     }
     setTeacherClassRoomModel(updatedModel);
   };

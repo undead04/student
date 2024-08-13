@@ -3,7 +3,7 @@ import React from "react";
 const LoadingReact = () => {
   return (
     <>
-      <div className="d-flex align-items-center justify-content-center">
+      <div className="h-75 d-flex align-items-center justify-content-center">
         <div
           className="spinner-border"
           role="status"

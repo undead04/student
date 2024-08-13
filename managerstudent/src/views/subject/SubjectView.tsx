@@ -64,6 +64,7 @@ const SubjectView = () => {
     }
   };
   useEffect(() => {
+    document.title = "Quản lí môn học";
     loadData();
     loadDataSubject();
   }, []);
@@ -145,7 +146,7 @@ const SubjectView = () => {
         loadData(); // Tải dữ liệu mới
         toast.success("Cập nhập môn học thành công");
       } catch (error: any) {
-        toast.error("Cập nhập môn hcoj thất bại");
+        toast.error("Cập nhập môn học thất bại");
         setMessageSubjectDetail(error.response.data.errors);
       }
     }

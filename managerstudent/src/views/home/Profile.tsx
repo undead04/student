@@ -12,12 +12,13 @@ const Profile = () => {
     }
   };
   useEffect(() => {
+    document.title = "Trang cá nhân";
     loadData();
   }, []);
   return (
     <>
       <section className="mt-3 ">
-        <div className="container bg-body-tertiary border p-3">
+        <div className="container bg-body-tertiary border border-1 p-3">
           <div className="row">
             <div className="col-1">
               <img src="" alt="" />
@@ -27,8 +28,8 @@ const Profile = () => {
         </div>
       </section>
       <section className="mt-3 ">
-        <div className="container bg-body-tertiary  p-3">
-          <div className="row border g-3">
+        <div className="container border border-1 bg-body-tertiary py-3">
+          <div className="row  g-3">
             <div className="col-12">Thông tin người dùng:</div>
             <div className="col-12 col-lg-6">
               <div className="row">

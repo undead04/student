@@ -16,6 +16,7 @@ export interface IMyHomework{
       questionId:string;
       answer: string[];
      }[],
+     status:boolean,
     
   
 }
@@ -25,6 +26,7 @@ export interface IMyHomeworkModel {
         questionId:string;
         answer: string[];
       }[],
+      userId:string
 
 }
 export interface IListMyHomework{
@@ -72,11 +74,33 @@ const remove = (id: string) => {
     .delete<ResponseWrapper<string>>(`${api.url.MyHomework}/${id}`)
     .then((res) => res.data);
 };
+const getListStudent=(subjectDetailId?:string,status?:boolean,page?:number,pageSize?:number)=>{
+  const params = new URLSearchParams();
+    let url=`${api.url.MyHomework}/student`
+  if (subjectDetailId) {
+    params.append("subjectDetailId", String(subjectDetailId));
+  }
+  if (status!=undefined) {
+    params.append("status", String(status));
+  }
+  if (page) {
+    params.append("page", String(page));
+  }
+  if (pageSize) {
+    params.append("pageSize", String(pageSize));
+  }
+  // Thêm các tham số vào URL nếu chúng tồn tại
+  if (params.toString()) {
+    url += "?" + params.toString();
+  }
+  return api.get<ResponseWrapper<IListMyHomework>>(url).then(res=>res.data)
+}
 const myHomeworkService = {
   list,
   get,
   add,
   update,
   remove,
+    getListStudent
 };
 export default myHomeworkService;

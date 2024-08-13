@@ -4,7 +4,7 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 interface RoleBasedRouteProps {
   children: React.ReactNode; // React Node
   allowedRoles: string[];
-  userRole: string; // Single string
+  userRole: string[];
 }
 const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
   children,
@@ -12,8 +12,7 @@ const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
   userRole,
   ...rest
 }) => {
-  const hasAccess = allowedRoles.includes(userRole);
-  console.log(hasAccess ? "true" : "false");
+  const hasAccess = allowedRoles.some((item) => userRole.includes(item));
   if (hasAccess) {
     return <>{children}</>; // Render children
   } else {

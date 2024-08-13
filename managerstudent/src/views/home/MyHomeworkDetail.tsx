@@ -30,7 +30,12 @@ const MyHomeworkDetail: React.FC<Prop> = ({ isExam, isStatistical }) => {
     ? new Date(myExam.exam.answerDate).getTime()
     : 0;
   // Calculate the difference in milliseconds
-  const timeDifference = createAtDate - answerDate;
+  const timeDifferenceMinutes = Math.floor(
+    (answerDate - createAtDate) / (60 * 1000)
+  );
+  const timeDiffenceSecond = Math.floor(
+    ((answerDate - createAtDate) % (60 * 1000)) / 1000
+  );
   const loadData = async () => {
     try {
       if (!isExam) {
@@ -87,6 +92,9 @@ const MyHomeworkDetail: React.FC<Prop> = ({ isExam, isStatistical }) => {
     }
   };
   useEffect(() => {
+    document.title = !isExam
+      ? "Xem chi tiết bài tập về nhà"
+      : "Xem chi tiết bài kiểm tra";
     loadData();
   }, []);
   const handleChangeIndexQuestion = (
@@ -99,10 +107,9 @@ const MyHomeworkDetail: React.FC<Prop> = ({ isExam, isStatistical }) => {
   const handleCancel = () => {
     if (!isStatistical) {
       if (isExam) {
-        naviagate(`/dasboadExam/${myExam.exam?._id}`);
+        naviagate(`/dasboadExam/${myExam._id}`);
       } else {
-        naviagate(`/dasboadHomework/${myHomework.homework?._id}`);
-        console.log(myHomework.homework?._id);
+        naviagate(`/dasboadHomework/${myHomework._id}`);
       }
     } else {
       if (!isExam) {
@@ -150,7 +157,14 @@ const MyHomeworkDetail: React.FC<Prop> = ({ isExam, isStatistical }) => {
           {isExam && myExam.exam && (
             <div className="col-6 col-lg-4">
               <p className="m-0">
-                <strong>Thời gian làm bài: {timeDifference}</strong>
+                <strong>
+                  Thời gian làm bài:{" "}
+                  {`${timeDifferenceMinutes
+                    .toString()
+                    .padStart(2, "0")}:${timeDiffenceSecond
+                    .toString()
+                    .padStart(2, "0")}`}
+                </strong>
               </p>
             </div>
           )}

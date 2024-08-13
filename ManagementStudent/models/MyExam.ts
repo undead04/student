@@ -9,10 +9,11 @@ export interface IMyExam extends Document{
    userId:IStudent,
    create_at:Date,
    answers: {
-      questionId: mongoose.ObjectId | IQuestion;
+      questionId:  IQuestion;
       answer: string[];
     }[],
-   note:string
+   note:string,
+   status:boolean,
 }
 const MyExamSchema:Schema=new Schema({
    examId:{type:Schema.ObjectId,ref:"Exam"},
@@ -24,7 +25,8 @@ const MyExamSchema:Schema=new Schema({
         answer: [{ type: String, required: true }],
       },
     ],
-   note:{type:String}
+   status:{type:Boolean,default:false},
+   note:{type:String},
 })
 const MyExam = mongoose.model<IMyExam>('MyExam', MyExamSchema);
 export default MyExam

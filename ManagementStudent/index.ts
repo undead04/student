@@ -62,4 +62,7 @@ app.use("/api/moveStudent",moveStudentRoute)
 app.use("/api/user",userRouter)
 app.use('/api/statiscalHomework',statisticalHomeworkRouter)
 app.use('/api/statiscalExam',statisticalExamRouter)
+app.listen(4000,()=>{
+  console.log("Kết nối thành công")
+})
 export default app

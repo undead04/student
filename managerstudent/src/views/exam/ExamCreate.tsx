@@ -1,24 +1,27 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
-import Input from "../../Components/Input";
 import subjectService, { ISubject } from "../../servers/subjectServer";
 import questionService, {
   IQuestion,
-  IQuestionModel,
   IRandomQuestion,
 } from "../../servers/questionServer";
 import subjectDetailService, {
   ISubjectDetail,
 } from "../../servers/subjectDetailServer";
-import { useNavigate, useParams } from "react-router-dom";
-import classService, { IClassRoom } from "../../servers/classServer";
+import { useNavigate } from "react-router-dom";
+import { IClassRoom } from "../../servers/classServer";
 import ModalReact from "../../Components/ModalReact";
-import homeworkService from "../../servers/homeworkServer";
 import ExamStep1 from "./ExamStep1";
 import ExamStep2 from "./ExamStep2";
 import HomewordQuestion from "../homework/HomeworkQuestion";
 import examService, { IExamModel } from "../../servers/examServer";
 import ExamStep3 from "./ExamStep3";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
+import teacherClassRoomService from "../../servers/teacherClassRoomServer";
+import { IMyHomeworkModel } from "../../servers/myHomeworkServer";
+import myExamService, { IMyExamModel } from "../../servers/myExamServer";
+import { toast } from "react-toastify";
 export interface ISelectQuestion {
   tableOfContents: string;
   question: string[];
@@ -32,10 +35,10 @@ const ExamCreate = () => {
     startDate: new Date(),
     endDate: new Date(),
     questionId: [],
-    studentId: [],
   });
   const [checkDifferentQuestion, setCheckDifferentQuestion] =
     useState<boolean>(true);
+  const [selectStudent, setSelectStudent] = useState<string[]>([]);
   const [selectRandomQuestion, setSelectRandomQuestion] = useState<
     IRandomQuestion[]
   >([]);
@@ -58,17 +61,17 @@ const ExamCreate = () => {
   const [LoadingForm, setLoadingForm] = useState(true);
   const [listSubject, setListSubject] = useState<ISubject[]>([]);
   const [subjectDetail, setSubjectDetail] = useState<ISubjectDetail[]>([]);
-  const listGrade = ["10", "11", "12"];
+  const [listGrade, setListGrade] = useState<string[]>([]);
   const [listClassRoom, setListClassRoom] = useState<IClassRoom[]>([]);
   const navigate = useNavigate();
   const [selectQuestion, setSelectQuestion] = useState<ISelectQuestion[]>([]);
+  const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+  const role = userInfo?.user.role;
   const loadData = async (
     subjectId?: string,
     classRoomId?: string,
     level?: number,
-    tableOfContent?: string,
-    page?: number,
-    pageSize?: number
+    tableOfContent?: string
   ) => {
     if (!checkDifferentQuestion) {
       questionService
@@ -87,10 +90,27 @@ const ExamCreate = () => {
     }
   };
   useEffect(() => {
+    document.title = "Tạo bài kiểm tra";
     const fetchData = async () => {
       try {
-        const subjectResponse = await subjectService.list();
-        setListSubject(subjectResponse.data.subject);
+        if (role?.includes("admin")) {
+          const subjectResponse = await subjectService.list();
+          setListSubject(subjectResponse.data.subject);
+        } else {
+          teacherClassRoomService.getStudent().then((res) => {
+            const uniqueSubjectMap: Map<string, ISubject> = new Map();
+            res.data.teacherClassRoom
+              .flatMap((item) => item.subjectDetail.subject)
+              .forEach((subject) => {
+                uniqueSubjectMap.set(subject._id, subject); // Sử dụng id làm khóa để loại bỏ trùng lặp
+              });
+
+            const uniqueSubject: ISubject[] = Array.from(
+              uniqueSubjectMap.values()
+            );
+            setListSubject(uniqueSubject);
+          });
+        }
       } catch (error: any) {
         console.log(error);
       }
@@ -141,24 +161,64 @@ const ExamCreate = () => {
   useEffect(() => {
     try {
       if (filterModel.grade) {
-        classService
-          .list(filterModel.grade)
-          .then((res) => setListClassRoom(res.data));
+        teacherClassRoomService
+          .getStudent(undefined, filterModel.subjectId, filterModel.grade)
+          .then((res) => {
+            const uniqueClassRooms: IClassRoom[] = Array.from(
+              new Set<IClassRoom>(
+                res.data.teacherClassRoom.flatMap(
+                  (item: { classRoom: IClassRoom }) => item.classRoom
+                )
+              )
+            );
+            setListClassRoom(uniqueClassRooms);
+          });
+      } else {
+        setListClassRoom([]);
       }
     } catch (error: any) {
       console.log(error);
     }
   }, [filterModel.grade]);
+  useEffect(() => {
+    if (filterModel.subjectId) {
+      teacherClassRoomService
+        .getStudent(undefined, filterModel.subjectId)
+        .then((res) => {
+          const uniqueGradeMap: Map<string, string> = new Map();
+          res.data.teacherClassRoom
+            .flatMap((item) => item.subjectDetail.grade)
+            .forEach((grade) => {
+              uniqueGradeMap.set(grade.toString(), grade.toString()); // Sử dụng id làm khóa để loại bỏ trùng lặp
+            });
+          const uniqueGrade: string[] = Array.from(uniqueGradeMap.values());
+          setListGrade(uniqueGrade);
+        });
+    }
+  }, [filterModel.subjectId]);
   const handleSelect = (e: string | string[], name: string) => {
     setexamModel({ ...examModel, [name]: e });
   };
   const handleChangeFilter = (
     e: React.FormEvent<HTMLSelectElement | HTMLInputElement>
   ) => {
-    setFilterModel({
+    let updatedFilterModel = {
       ...filterModel,
       [e.currentTarget.name]: e.currentTarget.value,
-    });
+    };
+    if (e.currentTarget.name === "subjectId") {
+      updatedFilterModel.grade = "";
+      setexamModel({
+        ...examModel,
+        classRoomId: [],
+      });
+    } else if (e.currentTarget.name === "grade") {
+      setexamModel({
+        ...examModel,
+        classRoomId: [],
+      });
+    }
+    setFilterModel(updatedFilterModel);
   };
   const handleChange = (
     e: React.FormEvent<
@@ -320,7 +380,8 @@ const ExamCreate = () => {
             examModel={examModel}
             handlePre={handlePre}
             handleSave={() => handleSave("")}
-            setExamModel={setexamModel}
+            setSelectStudent={setSelectStudent}
+            selectStudent={selectStudent}
           />
         );
         break;
@@ -338,20 +399,35 @@ const ExamCreate = () => {
   };
   const handleSave = async (id: string) => {
     if (id === "") {
+      let responseExam: any = undefined;
       if (filterModel.isAuto) {
-        const promises = selectRandomQuestion.map((item) =>
-          questionService.random(item)
+        const promises = selectRandomQuestion.map(
+          async (item) => await questionService.random(item)
         );
         const results = await Promise.all(promises);
         const array: string[] = results.flatMap((res) => res.data);
-        await examService.add({
+        responseExam = await examService.add({
           ...examModel,
           questionId: array,
         });
       } else {
-        await examService.add(examModel);
+        responseExam = await examService.add(examModel);
       }
+      const responseQuestion = await examService.get(responseExam.data);
+      const myExamPromises = selectStudent.map(async (element) => {
+        const myExamModel: IMyExamModel = {
+          examId: responseExam.data,
+          answers: responseQuestion.data.question.map((item) => ({
+            questionId: item._id,
+            answer: [],
+          })),
+          userId: element,
+        };
+        return myExamService.add(myExamModel);
+      });
+      await Promise.all(myExamPromises);
       handleNavigate();
+      toast.success("Tạo bài kiểm tra thành công");
     } else {
       await examService.update(id, examModel);
     }

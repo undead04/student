@@ -1,5 +1,5 @@
 import  express,{Request,Response} from "express";
-import { repository } from "../models/DTO";
+import { repository } from '../models/DTO/DTO';
 import Student from './../models/Student';
 const router= express.Router()
 router.put('/', 

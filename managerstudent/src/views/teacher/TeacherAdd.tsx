@@ -38,7 +38,7 @@ const TeacherAdd: React.FC<PropAdd> = ({
       setSubject(objectSubject);
     }
     setLoading(false);
-  }, []);
+  }, [subject]);
 
   return (
     <>

@@ -29,7 +29,6 @@ const PaginationRect: FC<IPagination> = ({
       arrayPage.push(i);
     }
   }
-
   return (
     <>
       <nav aria-label="Page navigation">

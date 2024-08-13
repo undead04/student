@@ -15,6 +15,7 @@ export interface IExam{
    answerDate:Date,
    create_at:Date,
    questionId:string[],
+   question:IQuestion[]
 }
 export interface IExamModel {
     name:string,
@@ -24,7 +25,6 @@ export interface IExamModel {
     endDate:Date,
     questionId:string[],
     answerDate:Date,
-    studentId:string[]
 }
 export interface IListExam{
     exam:IExam[],
@@ -34,8 +34,6 @@ export interface IListExam{
 const list = (
   subjectId?:string,
   classRoomId?:string,
-  from?:Date,
-  to?:Date,
   page?:number,
   pageSize?:number
 ) => {
@@ -46,12 +44,6 @@ const list = (
   }
   if (classRoomId) {
     params.append("classRoomId", String(classRoomId));
-  }
-  if (from) {
-    params.append("from", String(from));
-  }
-  if (to) {
-    params.append("to", String(to));
   }
   if (page) {
     params.append("page", String(page));
@@ -71,8 +63,6 @@ const list = (
 const getTeacher = (
   subjectId?:string,
   classRoomId?:string,
-  from?:Date,
-  to?:Date,
   page?:number,
   pageSize?:number
 ) => {
@@ -83,12 +73,6 @@ const getTeacher = (
   }
   if (classRoomId) {
     params.append("classRoomId", String(classRoomId));
-  }
-  if (from) {
-    params.append("from", String(from));
-  }
-  if (to) {
-    params.append("to", String(to));
   }
   if (page) {
     params.append("page", String(page));
@@ -110,6 +94,7 @@ const get = (id: string) => {
     .get<ResponseWrapper<IExam>>(`${api.url.exam}/${id}`)
     .then((res) => res.data);
 };
+
 const add = (data: IExamModel) => {
   return api
     .post<ResponseWrapper<string>>(`${api.url.exam}`, data)
@@ -131,6 +116,7 @@ const examService = {
   add,
   update,
   remove,
-  getTeacher
+  getTeacher,
+ 
 };
 export default examService;

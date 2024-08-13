@@ -14,6 +14,7 @@ export interface IMyHomework extends Document{
       questionId: mongoose.Schema.Types.ObjectId | IQuestion;
       answer: string[];
     }[],
+    status:boolean
    
 }
 const MyHomeworkSchema:Schema=new Schema({
@@ -26,6 +27,7 @@ const MyHomeworkSchema:Schema=new Schema({
         answer: [{ type: String, required: true }],
       },
     ],
+    status:{type:Boolean,default:false}
    
 })
 const MyHomework = mongoose.model<IMyHomework>('MyHomework', MyHomeworkSchema);

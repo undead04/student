@@ -12,6 +12,8 @@ import homeworkService, {
 import classService, { IClassRoom } from "../../servers/classServer";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
+import teacherClassRoomService from "../../servers/teacherClassRoomServer";
+import subjectDetailService from "../../servers/subjectDetailServer";
 const Homework = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -30,7 +32,7 @@ const Homework = () => {
     _id: "",
   });
   const [listClassRoom, setListClassRoom] = useState<IClassRoom[]>([]);
-  const listGrade = ["10", "11", "12"];
+  const [listGrade, setListGrade] = useState<string[]>([]);
   const [show, setshow] = useState(false);
   const [filterModel, setFilterModel] = useState({
     page:
@@ -40,26 +42,22 @@ const Homework = () => {
     pageSize: 10,
     subjectId: searchParams.get("subjectId") ?? "",
     classRoomId: searchParams.get("classRoomId") ?? "",
-    from: undefined,
-    to: undefined,
     grade: searchParams.get("grade") ?? "",
   });
   const loadData = async (
     subjectId?: string,
     classRoomId?: string,
-    from?: Date,
-    to?: Date,
     page?: number,
     pageSize?: number
   ) => {
     try {
-      if (!role?.includes("teacher")) {
-        homeworkService
-          .list(subjectId, classRoomId, from, to, page, pageSize)
+      if (role?.includes("admin")) {
+        await homeworkService
+          .list(subjectId, classRoomId, page, pageSize)
           .then((res) => setListHomework(res.data));
       } else {
-        homeworkService
-          .getTeacher(subjectId, classRoomId, from, to, page, pageSize)
+        await homeworkService
+          .getTeacher(subjectId, classRoomId, page, pageSize)
           .then((res) => setListHomework(res.data));
       }
     } catch (error: any) {
@@ -67,10 +65,42 @@ const Homework = () => {
     }
   };
   useEffect(() => {
-    subjectService.list().then((res) => setListSubject(res.data.subject));
+    if (role?.includes("admin")) {
+      subjectService.list().then((res) => setListSubject(res.data.subject));
+    } else {
+      teacherClassRoomService.getStudent().then((res) => {
+        const uniqueSubjectMap: Map<string, ISubject> = new Map();
+        res.data.teacherClassRoom
+          .flatMap((item) => item.subjectDetail.subject)
+          .forEach((subject) => {
+            uniqueSubjectMap.set(subject._id, subject); // Sử dụng id làm khóa để loại bỏ trùng lặp
+          });
+
+        const uniqueSubject: ISubject[] = Array.from(uniqueSubjectMap.values());
+        setListSubject(uniqueSubject);
+        setLoading(false);
+      });
+    }
   }, []);
   useEffect(() => {
+    if (filterModel.subjectId) {
+      teacherClassRoomService
+        .getStudent(undefined, filterModel.subjectId)
+        .then((res) => {
+          const uniqueGradeMap: Map<string, string> = new Map();
+          res.data.teacherClassRoom
+            .flatMap((item) => item.subjectDetail.grade)
+            .forEach((grade) => {
+              uniqueGradeMap.set(grade.toString(), grade.toString()); // Sử dụng id làm khóa để loại bỏ trùng lặp
+            });
+          const uniqueGrade: string[] = Array.from(uniqueGradeMap.values());
+          setListGrade(uniqueGrade);
+        });
+    }
+  }, [filterModel.subjectId]);
+  useEffect(() => {
     const params: Record<string, string> = {};
+    document.title = "Quản lí bài tập về nhà";
     if (filterModel.subjectId) {
       params["subjectId"] = String(filterModel.subjectId);
     }
@@ -87,8 +117,6 @@ const Homework = () => {
     loadData(
       filterModel.subjectId,
       filterModel.classRoomId,
-      filterModel.from,
-      filterModel.to,
       filterModel.page,
       filterModel.pageSize
     );
@@ -97,19 +125,37 @@ const Homework = () => {
   useEffect(() => {
     try {
       if (filterModel.grade) {
-        classService
-          .list(filterModel.grade)
-          .then((res) => setListClassRoom(res.data));
+        teacherClassRoomService
+          .getStudent(undefined, filterModel.subjectId, filterModel.grade)
+          .then((res) => {
+            const uniqueClassRooms: IClassRoom[] = Array.from(
+              new Set<IClassRoom>(
+                res.data.teacherClassRoom.flatMap(
+                  (item: { classRoom: IClassRoom }) => item.classRoom
+                )
+              )
+            );
+            setListClassRoom(uniqueClassRooms);
+          });
+      } else {
+        setListClassRoom([]);
       }
     } catch (error: any) {
       console.log(error);
     }
   }, [filterModel.grade]);
   const handleSelectFilter = (e: React.FormEvent<HTMLSelectElement>) => {
-    setFilterModel({
+    let updatedFilterModel = {
       ...filterModel,
       [e.currentTarget.name]: e.currentTarget.value,
-    });
+    };
+    if (e.currentTarget.name === "subjectId") {
+      updatedFilterModel.grade = "";
+      updatedFilterModel.classRoomId = "";
+    } else if (e.currentTarget.name === "grade") {
+      updatedFilterModel.classRoomId = "";
+    }
+    setFilterModel(updatedFilterModel);
   };
   const handleGet = async (id: string) => {
     try {
@@ -132,8 +178,6 @@ const Homework = () => {
       loadData(
         filterModel.subjectId,
         filterModel.classRoomId,
-        filterModel.from,
-        filterModel.to,
         filterModel.page,
         filterModel.pageSize
       );
@@ -180,7 +224,7 @@ const Homework = () => {
                   <select
                     className="form-select"
                     name="subjectId"
-                    defaultValue={""}
+                    value={filterModel.subjectId}
                     onChange={handleSelectFilter}
                   >
                     <option value="" disabled hidden>
@@ -202,7 +246,7 @@ const Homework = () => {
                   <select
                     className="form-select"
                     name="grade"
-                    defaultValue={""}
+                    value={filterModel.grade}
                     onChange={handleSelectFilter}
                   >
                     <option value="" disabled hidden>
@@ -224,7 +268,7 @@ const Homework = () => {
                   <select
                     className="form-select"
                     name="classRoomId"
-                    defaultValue={""}
+                    value={filterModel.classRoomId}
                     onChange={handleSelectFilter}
                   >
                     <option value="" disabled hidden>
@@ -236,30 +280,6 @@ const Homework = () => {
                       </option>
                     ))}
                   </select>
-                </div>
-              </div>
-              <div className="col-12 col-sm-4 col-lg-3">
-                <div className="form-group">
-                  <label htmlFor="" className="form-label">
-                    Ngày bắt đầu
-                  </label>
-                  <input
-                    type="date"
-                    className="form-control bg-transparent text-primary"
-                    name="startDate"
-                  />
-                </div>
-              </div>
-              <div className="col-12 col-sm-4 col-lg-3">
-                <div className="form-group">
-                  <label htmlFor="" className="form-label">
-                    Ngày kết thúc
-                  </label>
-                  <input
-                    type="date"
-                    className="form-control bg-transparent text-primary"
-                    name="endDate"
-                  />
                 </div>
               </div>
             </div>
@@ -283,6 +303,7 @@ const Homework = () => {
                     <th scope="col">Lớp</th>
                     <th scope="col">Tên bài tập</th>
                     <th scope="col">Người tạo</th>
+                    <th scope="col">Ngày tạo</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -295,8 +316,11 @@ const Homework = () => {
                           1}
                       </th>
                       <td>{item.subjectDetail.subject.name}</td>
-                      <td>{item.classRoom.map((item) => `${item.name},  `)}</td>
+                      <td>
+                        {item.classRoom.map((item) => item.name).join(", ")}
+                      </td>
                       <td>{item.name}</td>
+                      <td>{item.user.name}</td>
                       <td>{item.create_at.toString().split("T")[0]}</td>
 
                       <td>
@@ -310,7 +334,7 @@ const Homework = () => {
                           className="btn btn-info me-2"
                           onClick={() => handleNavigateStatical(item._id)}
                         >
-                          Thống kê
+                          <i className="fa-solid fa-chart-simple"></i>
                         </button>
                         <button
                           className="btn btn-danger me-2"

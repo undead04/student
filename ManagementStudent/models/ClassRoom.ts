@@ -1,6 +1,5 @@
 import mongoose,{Schema,Document} from "mongoose"
 export interface IClassRoom extends Document{
-   
    name:string,
    grade:number,
 }

@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import homeworkService, { IHomework } from "../../servers/homeworkServer";
 import questionService, { IQuestion } from "../../servers/questionServer";
 import myHomeworkService, {
+  IMyHomework,
   IMyHomeworkModel,
 } from "../../servers/myHomeworkServer";
 import LoadingReact from "../../Components/LoadingReact";
@@ -36,15 +37,23 @@ const MyHomework: React.FC<Prop> = ({ isExam }) => {
   const { id } = useParams();
   const [homeWork, setHomeWork] = useState<Partial<IHomework>>({ _id: "" });
   const [question, setQuestion] = useState<Partial<IQuestion[]>>([]);
+  const [myHomework, setMyHomework] = useState<Partial<IMyHomework>>({
+    _id: "",
+  });
   const [indexQuestion, setIndexQuestion] = useState(0);
   const [myHomeworkModel, setMyHomeworkModel] = useState<IMyHomeworkModel>({
     homeworkId: "",
     answers: [],
+    userId: "",
   });
   const [exam, setExam] = useState<Partial<IExam>>({ _id: "" });
   const [myExamModel, setMyExamModel] = useState<IMyExamModel>({
     examId: "",
     answers: [],
+    userId: "",
+  });
+  const [myExam, setMyExam] = useState<Partial<IMyExam>>({
+    _id: "",
   });
   const [timeLeft, setTimeLeft] = useState<Partial<TimeLeft>>();
   const [loading, setLoading] = useState(true);
@@ -52,36 +61,39 @@ const MyHomework: React.FC<Prop> = ({ isExam }) => {
   const loadData = async () => {
     try {
       if (!isExam) {
-        const response = await homeworkService.get(id as string);
-        setHomeWork(response.data);
-        const promise = response.data.questionId?.map((item) =>
-          questionService.get(item)
+        const responseMyHomework = await myHomeworkService
+          .get(id ?? "")
+          .then((res) => res.data);
+        setHomeWork(responseMyHomework.homework);
+        setMyHomework(responseMyHomework);
+        const question = await responseMyHomework.homework.questionId.map(
+          async (item) => {
+            return await questionService.get(item).then((res) => res.data);
+          }
         );
-        const results = await Promise.all(promise);
-        const array: IQuestion[] = results.map((res) => res.data);
-        setMyHomeworkModel({
+        const array = await Promise.all(question);
+        await setMyHomeworkModel({
           homeworkId: id as string,
-          answers: array.map((item) => ({
-            questionId: item._id,
-            answer: [],
-          })),
+          answers: responseMyHomework.answers,
+          userId: responseMyHomework.user._id,
         });
         setQuestion(array);
         setLoading(false);
       } else {
-        const response = await examService.get(id as string);
-        setExam(response.data);
-        const promise = response.data.questionId?.map((item) =>
+        const responseMyExam = await myExamService
+          .get(id as string)
+          .then((res) => res.data);
+        setExam(responseMyExam.exam);
+        setMyExam(responseMyExam);
+        const promise = responseMyExam.exam.questionId?.map((item) =>
           questionService.get(item)
         );
         const results = await Promise.all(promise);
         const array: IQuestion[] = results.map((res) => res.data);
         setMyExamModel({
           examId: id as string,
-          answers: array.map((item) => ({
-            questionId: item._id,
-            answer: [],
-          })),
+          answers: responseMyExam.answers,
+          userId: responseMyExam.user._id,
         });
         setQuestion(array);
         setLoading(false);
@@ -91,6 +103,7 @@ const MyHomework: React.FC<Prop> = ({ isExam }) => {
     }
   };
   useEffect(() => {
+    document.title = !isExam ? "Làm bài tập về nhà" : "Làm bài kiểm tra";
     loadData();
   }, []);
 
@@ -101,7 +114,7 @@ const MyHomework: React.FC<Prop> = ({ isExam }) => {
         (timeLeft?.minutes as number) <= 0 &&
         (timeLeft?.seconds as number) <= 0
       ) {
-        handleSave();
+        handleSave("");
         return;
       }
 
@@ -224,12 +237,12 @@ const MyHomework: React.FC<Prop> = ({ isExam }) => {
       }
     }
   };
-  const handleSave = async () => {
+  const handleSave = async (id: string) => {
     try {
       if (!isExam) {
-        await myHomeworkService.add(myHomeworkModel);
+        await myHomeworkService.update(id, myHomeworkModel);
       } else {
-        await myExamService.add(myExamModel);
+        await myExamService.update(id, myExamModel);
       }
       handleNavigate();
     } catch (error: any) {
@@ -238,12 +251,11 @@ const MyHomework: React.FC<Prop> = ({ isExam }) => {
   };
   const handleNavigate = () => {
     if (!isExam) {
-      naviagate(`/dasboadHomework/${homeWork._id}`);
+      naviagate(`/dasboadHomework/${myHomework._id}`);
     } else {
-      naviagate(`/dasboadExam/${exam._id}`);
+      naviagate(`/dasboadExam/${myExam._id}`);
     }
   };
-
   return (
     <>
       <div className="container mt-3">
@@ -325,7 +337,11 @@ const MyHomework: React.FC<Prop> = ({ isExam }) => {
                   <div className="col-12 text-center mb-3">
                     <button
                       className="btn btn-success p-3"
-                      onClick={handleSave}
+                      onClick={() =>
+                        handleSave(
+                          !isExam ? myHomework?._id ?? "" : myExam._id ?? ""
+                        )
+                      }
                     >
                       {!isExam ? " Nộp bài tập về nhà" : "Nộp bài kiểm tra"}
                     </button>

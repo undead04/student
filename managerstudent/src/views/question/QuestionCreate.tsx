@@ -10,6 +10,9 @@ import subjectDetailService, {
 } from "../../servers/subjectDetailServer";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../store";
+import teacherClassRoomService from "../../servers/teacherClassRoomServer";
 
 const QuestionCreate = () => {
   const [questionModel, setQuestionModel] = useState<IQuestionModel[]>([]);
@@ -18,14 +21,15 @@ const QuestionCreate = () => {
   const [listSubject, setListSubject] = useState<ISubject[]>([]);
   const [subjectDetail, setSubjectDetail] = useState<ISubjectDetail[]>([]);
   const [question, setQuestion] = useState<IQuestion>();
-  const listGrade = ["10", "11", "12"];
+  const [listGrade, setListGrade] = useState<string[]>([]);
   const listLevel = ["Thấp", "Trung bình", "Cao"];
+  const dispatch = useDispatch();
+  const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+  const role = userInfo?.user.role;
   const navigate = useNavigate();
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const subjectResponse = await subjectService.list();
-        setListSubject(subjectResponse.data.subject);
         if (id !== undefined) {
           const questionResponse = await questionService.get(id);
           setQuestion(questionResponse.data);
@@ -62,8 +66,27 @@ const QuestionCreate = () => {
         console.log(error);
       }
     };
-
     fetchData();
+  }, []);
+  useEffect(() => {
+    document.title = !id ? "Tạo câu hỏi" : "Cập nhập câu hỏi";
+    if (role?.includes("admin")) {
+      subjectService.list().then((res) => {
+        setListSubject(res.data.subject);
+      });
+    } else {
+      teacherClassRoomService.getStudent().then((res) => {
+        const uniqueSubjectMap: Map<string, ISubject> = new Map();
+        res.data.teacherClassRoom
+          .flatMap((item) => item.subjectDetail.subject)
+          .forEach((subject) => {
+            uniqueSubjectMap.set(subject._id, subject); // Sử dụng id làm khóa để loại bỏ trùng lặp
+          });
+
+        const uniqueSubject: ISubject[] = Array.from(uniqueSubjectMap.values());
+        setListSubject(uniqueSubject);
+      });
+    }
   }, []);
   useEffect(() => {
     try {
@@ -85,6 +108,23 @@ const QuestionCreate = () => {
             };
             setQuestionModel(newQuestion);
             setSubjectDetail(res.data);
+          });
+      } else {
+        setSubjectDetail([]);
+      }
+      if (questionModel[indexQuestion]?.subjectId) {
+        teacherClassRoomService
+          .getStudent(undefined, questionModel[indexQuestion]?.subjectId)
+          .then((res) => {
+            console.log(res.data);
+            const uniqueGradeMap: Map<string, string> = new Map();
+            res.data.teacherClassRoom
+              .flatMap((item) => item.subjectDetail.grade)
+              .forEach((grade) => {
+                uniqueGradeMap.set(grade.toString(), grade.toString()); // Sử dụng id làm khóa để loại bỏ trùng lặp
+              });
+            const uniqueGrade: string[] = Array.from(uniqueGradeMap.values());
+            setListGrade(uniqueGrade);
           });
       }
     } catch (error: any) {
@@ -137,6 +177,12 @@ const QuestionCreate = () => {
       ...questionIndex,
       [e.currentTarget.name]: e.currentTarget.value,
     };
+    if (e.currentTarget.name === "subjectId") {
+      newQuestion[index].grade = "";
+      newQuestion[index].tableOfContents = "";
+    } else if (e.currentTarget.name === "grade") {
+      newQuestion[index].tableOfContents = "";
+    }
     setQuestionModel(newQuestion);
   };
   const handleChangeCheckIsMul = (
@@ -259,7 +305,6 @@ const QuestionCreate = () => {
       setQuestionModel(newQuestion);
     }
   };
-  console.log(indexQuestion);
   return (
     <>
       <div className="container mt-3">

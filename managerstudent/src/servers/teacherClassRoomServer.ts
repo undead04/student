@@ -64,17 +64,24 @@ const get = (id: string) => {
     .get<ResponseWrapper<ITeacherRoom>>(`${api.url.teacherClassRoom}/${id}`)
     .then((res) => res.data);
 };
-const getStudent = (subjectDetailId?:string) => {
-  let url=`${api.url.teacherClassRoom}/student`;
+const getStudent = (classRoom?:string,subjectId?:string,grade?:string) => {
+  let url=`${api.url.teacherClassRoom}/auth`;
   const params = new URLSearchParams();
-  if(subjectDetailId){
-    params.append("subjectDetailId",subjectDetailId)
+  if(classRoom){
+    params.append("classRoom",classRoom)
   }
+  if(subjectId){
+    params.append('subjectId',subjectId);
+  }
+  if(grade){
+    params.append('grade',grade);
+  }
+  // Thêm các tham số vào URL nếu chúng tồn tại
   if (params.toString()) {
     url += "?" + params.toString();
   }
   return api
-    .get<ResponseWrapper<ITeacherRoom[]>>(url)
+    .get<ResponseWrapper<IListTeacherRoom>>(url)
     .then((res) => res.data);
 };
 const add = (data: ITeacherClassRoomModel) => {

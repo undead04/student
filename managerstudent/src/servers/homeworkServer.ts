@@ -2,9 +2,9 @@ import api from "./api";
 import ResponseWrapper from "./responseWrapper";
 import { IPage } from '../models/Page';
 import { ISubjectDetail } from "./subjectDetailServer";
-import { IQuestion } from "./questionServer";
 import { IClassRoom } from "./classServer";
-import { Id } from "@reduxjs/toolkit/dist/tsHelpers";
+import { IQuestion } from "./questionServer";
+import { ITeacher } from "./teacherServer";
 export interface IHomework{
     _id: string;
     name:string,
@@ -13,7 +13,9 @@ export interface IHomework{
    startDate:Date,
    endDate:Date,
    create_at:Date,
-   questionId:string[]
+   questionId:string[],
+   question:IQuestion[]
+   user:ITeacher
   
 }
 export interface IHomeworkModel {
@@ -23,7 +25,6 @@ export interface IHomeworkModel {
     startDate:string,
     endDate:string,
     questionId:string[],
-    studentId:string[]
 }
 export interface IListHomework{
   homework:IHomework[],
@@ -32,8 +33,6 @@ export interface IListHomework{
 const list = (
   subjectId?:string,
   classRoomId?:string,
-  from?:Date,
-  to?:Date,
   page?:number,
   pageSize?:number
 ) => {
@@ -44,12 +43,6 @@ const list = (
   }
   if (classRoomId) {
     params.append("classRoomId", String(classRoomId));
-  }
-  if (from) {
-    params.append("from", String(from));
-  }
-  if (to) {
-    params.append("to", String(to));
   }
   if (page) {
     params.append("page", String(page));
@@ -69,8 +62,6 @@ const list = (
 const getTeacher = (
   subjectId?:string,
   classRoomId?:string,
-  from?:Date,
-  to?:Date,
   page?:number,
   pageSize?:number
 ) => {
@@ -81,12 +72,6 @@ const getTeacher = (
   }
   if (classRoomId) {
     params.append("classRoomId", String(classRoomId));
-  }
-  if (from) {
-    params.append("from", String(from));
-  }
-  if (to) {
-    params.append("to", String(to));
   }
   if (page) {
     params.append("page", String(page));

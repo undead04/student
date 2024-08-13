@@ -19,6 +19,7 @@ import subjectService, { ISubject } from "../../servers/subjectServer";
 import authorizeServices from "../../servers/authorizeServer";
 import SelectReact from "../../Components/SelectReact";
 import { toast } from "react-toastify";
+import { useSearchParams } from "react-router-dom";
 const TeacherView = () => {
   const [listTeacher, setListTeacher] = useState<IListTeacher>();
   const [showAuthorize, setShowAuthorize] = useState(false);
@@ -36,6 +37,7 @@ const TeacherView = () => {
     subjectId: [],
   });
   const [listSubject, setListSubject] = useState<ISubject[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [teacher, setTeacher] = useState<Partial<ITeacher>>({ _id: "" });
   const [message, setMessage] = useState<IValidationTeacher>({
     name: "",
@@ -63,12 +65,12 @@ const TeacherView = () => {
   const [loadingForm, setLoadingForm] = useState(true);
   const [loading, setLoading] = useState(true);
   const [filterModel, setFilterModel] = useState({
-    page: 1,
-    pageSize: 10,
+    page: Number(searchParams.get("page")) || 1,
+    pageSize: Number(searchParams.get("pageSize")) || 10,
     sortBy: "",
     order: "asc",
-    search: "",
-    subjectId: "",
+    search: searchParams.get("search") || "",
+    subjectId: searchParams.get("subjectId") || "",
   });
   const loadData = async (
     search?: string,
@@ -88,6 +90,18 @@ const TeacherView = () => {
     }
   };
   useEffect(() => {
+    const params: Record<string, string> = {};
+    if (filterModel.subjectId) {
+      params["subjectId"] = String(filterModel.subjectId);
+    }
+    if (filterModel.page) {
+      params["page"] = String(filterModel.page);
+    }
+    if (filterModel.search) {
+      params["search"] = String(filterModel.search);
+    }
+    document.title = "Quản lí giáo viên";
+    setSearchParams(params);
     loadData(
       "",
       filterModel.subjectId,
@@ -297,7 +311,9 @@ const TeacherView = () => {
       try {
         await authorizeServices.put(userId);
         handleCloseAuthorize();
+        toast.success("Trao quyền thành công");
       } catch (error: any) {
+        toast.error("Trao quyền thất bại");
         console.log(error);
       }
     }
@@ -421,7 +437,9 @@ const TeacherView = () => {
         <>
           <div className="row mt-3">
             <div className="col">
-              <p className="fs-4 fw-bold">Danh sách giáo viên</p>
+              <p className="fs-4 fw-bold">
+                Danh sách giáo viên - sỉ số: {listTeacher?.page.totalDocument}
+              </p>
             </div>
           </div>
           <div className="row">
@@ -458,7 +476,15 @@ const TeacherView = () => {
                   label: item.name,
                   value: item._id,
                 }))}
-                defaultValue={[]}
+                defaultValue={[
+                  {
+                    label:
+                      listSubject.find(
+                        (item) => item._id === filterModel.subjectId
+                      )?.name ?? "",
+                    value: filterModel.subjectId,
+                  },
+                ]}
                 name="subjectId"
                 nameHandle={handleSelectFilter}
               />

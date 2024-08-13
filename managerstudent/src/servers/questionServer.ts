@@ -3,6 +3,7 @@ import ResponseWrapper from "./responseWrapper";
 import { IPage } from '../models/Page';
 import { ISubject } from "./subjectServer";
 import { ISubjectDetail } from "./subjectDetailServer";
+import { ITeacher } from "./teacherServer";
 export interface IQuestion {
   _id: string;
   question:string,
@@ -13,8 +14,8 @@ export interface IQuestion {
    grade:string,
    tableOfContents:string,
    isMul:boolean,
-   level:number
-  
+   level:number,
+  teacher:ITeacher
 }
 export interface IRandomQuestion{
   subjectDetailId:string,

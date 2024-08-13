@@ -10,6 +10,7 @@ import classService, { IClassRoom } from "../../servers/classServer";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import homeworkService from "../../servers/homeworkServer";
+import teacherClassRoomService from "../../servers/teacherClassRoomServer";
 const ListExam = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,7 +29,7 @@ const ListExam = () => {
     _id: "",
   });
   const [listClassRoom, setListClassRoom] = useState<IClassRoom[]>([]);
-  const listGrade = ["10", "11", "12"];
+  const [listGrade, setListGrade] = useState<string[]>([]);
   const [show, setshow] = useState(false);
   const [filterModel, setFilterModel] = useState({
     page:
@@ -38,26 +39,22 @@ const ListExam = () => {
     pageSize: 10,
     subjectId: searchParams.get("subjectId") ?? "",
     classRoomId: searchParams.get("classRoomId") ?? "",
-    from: undefined,
-    to: undefined,
     grade: searchParams.get("grade") ?? "",
   });
   const loadData = async (
     subjectId?: string,
     classRoomId?: string,
-    from?: Date,
-    to?: Date,
     page?: number,
     pageSize?: number
   ) => {
     try {
-      if (!role?.includes("teacher")) {
+      if (role?.includes("admin")) {
         examService
-          .list(subjectId, classRoomId, from, to, page, pageSize)
+          .list(subjectId, classRoomId, page, pageSize)
           .then((res) => setListExam(res.data));
       } else {
         examService
-          .getTeacher(subjectId, classRoomId, from, to, page, pageSize)
+          .getTeacher(subjectId, classRoomId, page, pageSize)
           .then((res) => setListExam(res.data));
       }
     } catch (error: any) {
@@ -65,8 +62,39 @@ const ListExam = () => {
     }
   };
   useEffect(() => {
-    subjectService.list().then((res) => setListSubject(res.data.subject));
+    if (role?.includes("admin")) {
+      subjectService.list().then((res) => setListSubject(res.data.subject));
+    } else {
+      teacherClassRoomService.getStudent().then((res) => {
+        const uniqueSubjectMap: Map<string, ISubject> = new Map();
+        res.data.teacherClassRoom
+          .flatMap((item) => item.subjectDetail.subject)
+          .forEach((subject) => {
+            uniqueSubjectMap.set(subject._id, subject); // Sử dụng id làm khóa để loại bỏ trùng lặp
+          });
+
+        const uniqueSubject: ISubject[] = Array.from(uniqueSubjectMap.values());
+        setListSubject(uniqueSubject);
+        setLoading(false);
+      });
+    }
   }, []);
+  useEffect(() => {
+    if (filterModel.subjectId) {
+      teacherClassRoomService
+        .getStudent(undefined, filterModel.subjectId)
+        .then((res) => {
+          const uniqueGradeMap: Map<string, string> = new Map();
+          res.data.teacherClassRoom
+            .flatMap((item) => item.subjectDetail.grade)
+            .forEach((grade) => {
+              uniqueGradeMap.set(grade.toString(), grade.toString()); // Sử dụng id làm khóa để loại bỏ trùng lặp
+            });
+          const uniqueGrade: string[] = Array.from(uniqueGradeMap.values());
+          setListGrade(uniqueGrade);
+        });
+    }
+  }, [filterModel.subjectId]);
   useEffect(() => {
     const params: Record<string, string> = {};
     if (filterModel.subjectId) {
@@ -82,11 +110,10 @@ const ListExam = () => {
       params["page"] = String(filterModel.page);
     }
     setSearchParams(params);
+    document.title = "Quản lí bài kiểm tra";
     loadData(
       filterModel.subjectId,
       filterModel.classRoomId,
-      filterModel.from,
-      filterModel.to,
       filterModel.page,
       filterModel.pageSize
     );
@@ -95,19 +122,37 @@ const ListExam = () => {
   useEffect(() => {
     try {
       if (filterModel.grade) {
-        classService
-          .list(filterModel.grade)
-          .then((res) => setListClassRoom(res.data));
+        teacherClassRoomService
+          .getStudent(undefined, filterModel.subjectId, filterModel.grade)
+          .then((res) => {
+            const uniqueClassRooms: IClassRoom[] = Array.from(
+              new Set<IClassRoom>(
+                res.data.teacherClassRoom.flatMap(
+                  (item: { classRoom: IClassRoom }) => item.classRoom
+                )
+              )
+            );
+            setListClassRoom(uniqueClassRooms);
+          });
+      } else {
+        setListClassRoom([]);
       }
     } catch (error: any) {
       console.log(error);
     }
   }, [filterModel.grade]);
   const handleSelectFilter = (e: React.FormEvent<HTMLSelectElement>) => {
-    setFilterModel({
+    let updatedFilterModel = {
       ...filterModel,
       [e.currentTarget.name]: e.currentTarget.value,
-    });
+    };
+    if (e.currentTarget.name === "subjectId") {
+      updatedFilterModel.grade = "";
+      updatedFilterModel.classRoomId = "";
+    } else if (e.currentTarget.name === "grade") {
+      updatedFilterModel.classRoomId = "";
+    }
+    setFilterModel(updatedFilterModel);
   };
   const handleGet = async (id: string) => {
     try {
@@ -130,8 +175,6 @@ const ListExam = () => {
       loadData(
         filterModel.subjectId,
         filterModel.classRoomId,
-        filterModel.from,
-        filterModel.to,
         filterModel.page,
         filterModel.pageSize
       );
@@ -178,7 +221,7 @@ const ListExam = () => {
                   <select
                     className="form-select"
                     name="subjectId"
-                    defaultValue={""}
+                    value={filterModel.subjectId}
                     onChange={handleSelectFilter}
                   >
                     <option value="" disabled hidden>
@@ -200,7 +243,7 @@ const ListExam = () => {
                   <select
                     className="form-select"
                     name="grade"
-                    defaultValue={""}
+                    value={filterModel.grade}
                     onChange={handleSelectFilter}
                   >
                     <option value="" disabled hidden>
@@ -222,7 +265,7 @@ const ListExam = () => {
                   <select
                     className="form-select"
                     name="classRoomId"
-                    defaultValue={""}
+                    value={filterModel.classRoomId}
                     onChange={handleSelectFilter}
                   >
                     <option value="" disabled hidden>
@@ -234,30 +277,6 @@ const ListExam = () => {
                       </option>
                     ))}
                   </select>
-                </div>
-              </div>
-              <div className="col-12 col-sm-4 col-lg-3">
-                <div className="form-group">
-                  <label htmlFor="" className="form-label">
-                    Ngày bắt đầu
-                  </label>
-                  <input
-                    type="date"
-                    className="form-control bg-transparent text-primary"
-                    name="startDate"
-                  />
-                </div>
-              </div>
-              <div className="col-12 col-sm-4 col-lg-3">
-                <div className="form-group">
-                  <label htmlFor="" className="form-label">
-                    Ngày kết thúc
-                  </label>
-                  <input
-                    type="date"
-                    className="form-control bg-transparent text-primary"
-                    name="endDate"
-                  />
                 </div>
               </div>
             </div>
@@ -293,7 +312,9 @@ const ListExam = () => {
                           1}
                       </th>
                       <td>{item.subjectDetail.subject.name}</td>
-                      <td>{item.classRoom.map((item) => `${item.name},  `)}</td>
+                      <td>
+                        {item.classRoom.map((item) => item.name).join(", ")}
+                      </td>
                       <td>{item.name}</td>
                       <td>{item.create_at.toString().split("T")[0]}</td>
 
@@ -308,7 +329,7 @@ const ListExam = () => {
                           className="btn btn-info me-2"
                           onClick={() => handleNavigateStatical(item._id)}
                         >
-                          Thống kê
+                          <i className="fa-solid fa-chart-simple"></i>
                         </button>
                         <button
                           className="btn btn-danger me-2"

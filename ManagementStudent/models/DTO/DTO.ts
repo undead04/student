@@ -1,6 +1,7 @@
 interface Page {
     totalPage: number;
     currentPage: number;
+    totalDocument:number;
 }
 
 interface RepositoryResponse {

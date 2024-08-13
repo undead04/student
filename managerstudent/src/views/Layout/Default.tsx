@@ -34,7 +34,6 @@ const Default = () => {
   const role: string[] = useSelector(
     (start: RootState) => start.auth.userInfo?.user.role ?? []
   );
-  const userRolesString = role.join();
   return (
     <>
       {isLogin ? (
@@ -44,10 +43,7 @@ const Default = () => {
             <Route
               path="subject"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["admin"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["admin"]} userRole={role}>
                   <SubjectView />
                 </RoleBasedRoute>
               }
@@ -55,10 +51,7 @@ const Default = () => {
             <Route
               path="home"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["student"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["student"]} userRole={role}>
                   <Home />
                 </RoleBasedRoute>
               }
@@ -66,10 +59,7 @@ const Default = () => {
             <Route
               path="grade"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["admin"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["admin"]} userRole={role}>
                   <GradeView />
                 </RoleBasedRoute>
               }
@@ -79,7 +69,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["admin", "teacher"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <StudentView />
                 </RoleBasedRoute>
@@ -88,10 +78,7 @@ const Default = () => {
             <Route
               path="teacher"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["admin"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["admin"]} userRole={role}>
                   <TeacherView />
                 </RoleBasedRoute>
               }
@@ -99,10 +86,7 @@ const Default = () => {
             <Route
               path="system"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["admin"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["admin"]} userRole={role}>
                   <SystemView />
                 </RoleBasedRoute>
               }
@@ -110,10 +94,7 @@ const Default = () => {
             <Route
               path="teacherClassRoom"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["admin"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["admin"]} userRole={role}>
                   <ClassTeacher />
                 </RoleBasedRoute>
               }
@@ -123,7 +104,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["teacher", "admin"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <QuestionView />
                 </RoleBasedRoute>
@@ -134,7 +115,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["teacher", "admin"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <QuestionCreate />
                 </RoleBasedRoute>
@@ -145,7 +126,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["teacher", "admin"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <QuestionCreate />
                 </RoleBasedRoute>
@@ -156,7 +137,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["teacher", "admin"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <Homework />
                 </RoleBasedRoute>
@@ -167,7 +148,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["teacher", "admin"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <HomeworkCreate />
                 </RoleBasedRoute>
@@ -178,7 +159,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["teacher", "admin"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <HomeworkDetail />
                 </RoleBasedRoute>
@@ -189,7 +170,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["teacher", "admin"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <ListExam />
                 </RoleBasedRoute>
@@ -200,7 +181,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["teacher", "admin"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <ExamCreate />
                 </RoleBasedRoute>
@@ -211,7 +192,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["teacher", "admin"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <ExamDetail />
                 </RoleBasedRoute>
@@ -221,10 +202,7 @@ const Default = () => {
             <Route
               path="myCourse/:id"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["student"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["student"]} userRole={role}>
                   <MyCourse />
                 </RoleBasedRoute>
               }
@@ -232,10 +210,7 @@ const Default = () => {
             <Route
               path="myHomework/:id"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["student"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["student"]} userRole={role}>
                   <MyHomework isExam={false} />
                 </RoleBasedRoute>
               }
@@ -243,10 +218,7 @@ const Default = () => {
             <Route
               path="myHomeworkDetail/:id"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["student"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["student"]} userRole={role}>
                   <MyHomeworkDetail isExam={false} isStatistical={false} />
                 </RoleBasedRoute>
               }
@@ -254,10 +226,7 @@ const Default = () => {
             <Route
               path="myExam/:id"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["student"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["student"]} userRole={role}>
                   <MyHomework isExam={true} />
                 </RoleBasedRoute>
               }
@@ -265,10 +234,7 @@ const Default = () => {
             <Route
               path="myExamDetail/:id"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["student"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["student"]} userRole={role}>
                   <MyHomeworkDetail isExam={true} isStatistical={false} />
                 </RoleBasedRoute>
               }
@@ -276,10 +242,7 @@ const Default = () => {
             <Route
               path="moveStudent"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["admin"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["admin"]} userRole={role}>
                   <MoveStudent />
                 </RoleBasedRoute>
               }
@@ -287,10 +250,7 @@ const Default = () => {
             <Route
               path="dasboadHomework/:id"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["student"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["student"]} userRole={role}>
                   <DasboadHomework isExam={false} />
                 </RoleBasedRoute>
               }
@@ -298,10 +258,7 @@ const Default = () => {
             <Route
               path="dasboadExam/:id"
               element={
-                <RoleBasedRoute
-                  allowedRoles={["student"]}
-                  userRole={userRolesString}
-                >
+                <RoleBasedRoute allowedRoles={["student"]} userRole={role}>
                   <DasboadHomework isExam={true} />
                 </RoleBasedRoute>
               }
@@ -312,7 +269,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["admin", "teacher"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <Statistical isExam={false} />
                 </RoleBasedRoute>
@@ -323,7 +280,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["admin", "teacher"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <Statistical isExam={true} />
                 </RoleBasedRoute>
@@ -334,7 +291,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["admin", "teacher"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <MyHomeworkDetail isExam={false} isStatistical={true} />
                 </RoleBasedRoute>
@@ -345,7 +302,7 @@ const Default = () => {
               element={
                 <RoleBasedRoute
                   allowedRoles={["admin", "teacher"]}
-                  userRole={userRolesString}
+                  userRole={role}
                 >
                   <MyHomeworkDetail isExam={true} isStatistical={true} />
                 </RoleBasedRoute>
