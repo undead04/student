@@ -1,7 +1,7 @@
 import axios from "axios";
 import store,{RootState} from "../store";
 const url = {
-  baseUrl: "https://studentserver.vercel/api",
+  baseUrl: "https://studentserver.vercel.app/api/",
   subjectDetail: "subjectDetail",
   subject: "subject",
   class: "classRoom",
